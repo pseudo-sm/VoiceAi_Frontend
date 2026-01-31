@@ -81,8 +81,10 @@ const Test = () => {
     const localWorkletNodeRef = useRef(null);
 
     const SAMPLE_RATE = 24000;
-    const WS_URL = 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone';
-    const OUTBOUND_WS_URL = 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone-outbound';
+    const WS_URL = import.meta.env.VITE_WS_URL
+        || 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone';
+    const OUTBOUND_WS_URL = import.meta.env.VITE_OUTBOUND_WS_URL
+        || 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone-outbound';
     const serviceOutboundPurposes = ['service_confirmation', 'service_complete', 'service_reminder', 'service_followup'];
 
     // --- Utility Functions ---

@@ -14,3 +14,15 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Environment Variables (Frontend)
+
+Do **not** put secrets (API keys, service accounts) in frontend env files. This app only needs public endpoints.
+
+Set these in your local `.env` (not committed):
+
+```
+VITE_API_BASE_URL=https://your-backend.example.com
+VITE_WS_URL=wss://your-backend.example.com/microphone
+VITE_OUTBOUND_WS_URL=wss://your-backend.example.com/microphone-outbound
+```
