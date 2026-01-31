@@ -1,6 +1,9 @@
 .dashboard-container {
     min-height: 80vh;
     background-color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .dashboard-header {
