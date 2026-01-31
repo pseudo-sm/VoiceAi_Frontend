@@ -40,7 +40,7 @@ jobs:
       - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: voice-ai-client
+          app-name: voiceai
           slot-name: production
           images: |
             voiceai.azurecr.io/voice-ai-client:${{ github.sha }}
