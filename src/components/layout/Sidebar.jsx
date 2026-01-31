@@ -1,0 +1,40 @@
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, BarChart2, FlaskConical, Mic } from 'lucide-react';
+import './Sidebar.css';
+
+const Sidebar = () => {
+    return (
+        <div className="sidebar">
+            <div className="sidebar-header">
+                <Mic className="logo-icon" color="#3b82f6" />
+                <span className="logo-text">Voice AI</span>
+            </div>
+            <nav className="sidebar-nav">
+                <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                    <LayoutDashboard className="nav-icon" />
+                    <span>Dashboard</span>
+                </NavLink>
+                <NavLink
+                    to="/stats"
+                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                    <BarChart2 className="nav-icon" />
+                    <span>Stats</span>
+                </NavLink>
+                <NavLink
+                    to="/test"
+                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                    <FlaskConical className="nav-icon" />
+                    <span>Test</span>
+                </NavLink>
+            </nav>
+        </div>
+    );
+};
+
+export default Sidebar;

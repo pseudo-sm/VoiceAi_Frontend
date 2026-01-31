@@ -1,0 +1,218 @@
+{
+    "summary": {
+        "daily": {
+            "totalCalls": {
+                "value": 45,
+                "trend": 5.2,
+                "isIncrease": true
+            },
+            "answered": {
+                "value": 32,
+                "trend": 3.1,
+                "isIncrease": true
+            },
+            "rejected": {
+                "value": 13,
+                "trend": 1.2,
+                "isIncrease": false
+            },
+            "duration": {
+                "value": "2h 15m",
+                "trend": 2.5,
+                "isIncrease": true
+            }
+        },
+        "weekly": {
+            "totalCalls": {
+                "value": 272,
+                "trend": 12.5,
+                "isIncrease": true
+            },
+            "answered": {
+                "value": 186,
+                "trend": 8.2,
+                "isIncrease": true
+            },
+            "rejected": {
+                "value": 86,
+                "trend": 2.4,
+                "isIncrease": false
+            },
+            "duration": {
+                "value": "14h 32m",
+                "trend": 5.7,
+                "isIncrease": true
+            }
+        },
+        "monthly": {
+            "totalCalls": {
+                "value": 1245,
+                "trend": 15.3,
+                "isIncrease": true
+            },
+            "answered": {
+                "value": 856,
+                "trend": 10.1,
+                "isIncrease": true
+            },
+            "rejected": {
+                "value": 389,
+                "trend": 4.5,
+                "isIncrease": false
+            },
+            "duration": {
+                "value": "48h 32m",
+                "trend": 7.8,
+                "isIncrease": true
+            }
+        }
+    },
+    "callTrends": {
+        "1W": [
+            {
+                "name": "Mon",
+                "calls": 45
+            },
+            {
+                "name": "Tue",
+                "calls": 52
+            },
+            {
+                "name": "Wed",
+                "calls": 38
+            },
+            {
+                "name": "Thu",
+                "calls": 65
+            },
+            {
+                "name": "Fri",
+                "calls": 48
+            },
+            {
+                "name": "Sat",
+                "calls": 25
+            },
+            {
+                "name": "Sun",
+                "calls": 15
+            }
+        ],
+        "2W": [
+            {
+                "name": "Week 1",
+                "calls": 288
+            },
+            {
+                "name": "Week 2",
+                "calls": 315
+            }
+        ],
+        "1M": [
+            {
+                "name": "Week 1",
+                "calls": 288
+            },
+            {
+                "name": "Week 2",
+                "calls": 315
+            },
+            {
+                "name": "Week 3",
+                "calls": 290
+            },
+            {
+                "name": "Week 4",
+                "calls": 352
+            }
+        ],
+        "6M": [
+            {
+                "name": "Aug",
+                "calls": 1100
+            },
+            {
+                "name": "Sep",
+                "calls": 1250
+            },
+            {
+                "name": "Oct",
+                "calls": 1180
+            },
+            {
+                "name": "Nov",
+                "calls": 1350
+            },
+            {
+                "name": "Dec",
+                "calls": 1420
+            },
+            {
+                "name": "Jan",
+                "calls": 1245
+            }
+        ]
+    },
+    "appointments": {
+        "booked": {
+            "value": 145,
+            "trend": 15.3,
+            "isIncrease": true
+        },
+        "reminders": {
+            "value": 320,
+            "trend": 5.1,
+            "isIncrease": true
+        }
+    },
+    "appointmentTable": [
+        {
+            "id": 1,
+            "date": "2026-01-14",
+            "name": "John Doe",
+            "phone": "+1 (555) 123-4567",
+            "email": "john@example.com",
+            "status": "Confirmed"
+        },
+        {
+            "id": 2,
+            "date": "2026-01-14",
+            "name": "Jane Smith",
+            "phone": "+1 (555) 987-6543",
+            "email": "jane@example.com",
+            "status": "Pending"
+        },
+        {
+            "id": 3,
+            "date": "2026-01-14",
+            "name": "Mike Ross",
+            "phone": "+1 (555) 456-7890",
+            "email": "mike@example.com",
+            "status": "Cancelled"
+        },
+        {
+            "id": 4,
+            "date": "2026-01-13",
+            "name": "Rachel Zane",
+            "phone": "+1 (555) 234-5678",
+            "email": "rachel@example.com",
+            "status": "Confirmed"
+        },
+        {
+            "id": 5,
+            "date": "2026-01-13",
+            "name": "Harvey Specter",
+            "phone": "+1 (555) 876-5432",
+            "email": "harvey@example.com",
+            "status": "Confirmed"
+        },
+        {
+            "id": 6,
+            "date": "2026-01-15",
+            "name": "Louis Litt",
+            "phone": "+1 (555) 345-6789",
+            "email": "louis@example.com",
+            "status": "Pending"
+        }
+    ]
+}
