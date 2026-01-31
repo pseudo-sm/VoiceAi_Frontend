@@ -63,7 +63,7 @@ const Dashboard = () => {
             phone: '+1 (555) 123-4567',
             vehicleName: 'Toyota Camry',
             vehicleNo: 'KA-01-AB-1234',
-            status: 'Done',
+            status: 'Pending',
             lastCalled: '2024-01-14T10:30:00',
             address: { street: '123 Main St', city: 'Bangalore', state: 'KA', zip: '560001' },
             activityLog: [
