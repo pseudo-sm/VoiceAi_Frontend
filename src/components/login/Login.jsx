@@ -21,7 +21,7 @@ const Login = () => {
         setTimeout(() => {
             if (username === 'admin' && password === 'adminpassword') {
                 toast.success('Login successful!');
-                navigate('/dashboard');
+                navigate('/stats');
             } else {
                 // setError('Invalid username or password');
                 toast.error('Invalid username or password');

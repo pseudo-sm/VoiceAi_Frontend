@@ -1,4 +1,4 @@
-import React,{useState} from "react";
+import React,{useState,useRef} from "react";
 import "./CampiginMangement.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -62,6 +62,20 @@ const handleCreate = () => {
   });
 };
 
+ const fileInputRef = useRef(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log("Selected file:", file);
+
+    // 👉 upload logic here (API call, FormData, etc.)
+  };
 
 const handleView = (item) => {
   setCampaign({ ...item });
@@ -363,7 +377,23 @@ const handleUpdate = () => {
   <div className="form-group  new-stl">
        <label>  </label>
        {/* <input type="file" name="file"  /> */}
-       <button className="action-button upload-button" style={{height:"37px",width:"200px",alignItems:"center",justifyContent:"center"}}   onClick={fileUploade}> <Upload/>Upload file</button>
+        <>
+      <button
+        className="action-button upload-button"
+        style={{ height: "37px", width: "200px", alignItems: "center", justifyContent: "center" }}
+        onClick={handleButtonClick}
+      >
+        <Upload /> Upload file
+      </button>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+    </>
+       {/* <button className="action-button upload-button" style={{height:"37px",width:"200px",alignItems:"center",justifyContent:"center"}}  > <Upload/>Upload file</button> */}
       </div>
         <div className="form-group">
           <label>Campaign Description</label>
