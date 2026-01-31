@@ -3,7 +3,7 @@ name: Deploy Static App to Azure
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
