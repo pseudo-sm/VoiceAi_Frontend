@@ -10,17 +10,15 @@ import statsData from '../../data/statsData.json';
 import './Stats.css';
 
 const Stats = () => {
-    const [globalFilter, setGlobalFilter] = useState('daily');
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [globalFilter, setGlobalFilter] = useState('all');
     const [stats, setStats] = useState(statsData);
     const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState(null);
 
-    const { summary, statusBreakdown, campaignProgress, appointmentTable } = stats;
+    const { summary, statusBreakdown, campaignProgress } = stats;
     const currentSummary = summary[globalFilter] || summary.daily;
-
-    // Filter table data based on selected date
-    const filteredTableData = appointmentTable.filter(item => item.date === selectedDate);
+    const currentStatusBreakdown = statusBreakdown[globalFilter] || statusBreakdown.daily;
+    const currentCampaignProgress = campaignProgress[globalFilter] || campaignProgress.daily;
 
     const StatCard = ({ label, value, trend, isIncrease, icon: Icon, color }) => (
         <div className="stat-card">
@@ -79,6 +77,12 @@ const Stats = () => {
                 {loadError && <div className="stats-error">{loadError}</div>}
                 {!loadError && isLoading && <div className="stats-loading">Loading...</div>}
                 <div className="filter-segmented-control">
+                    <button
+                        className={`filter-btn ${globalFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setGlobalFilter('all')}
+                    >
+                        All
+                    </button>
                     <button
                         className={`filter-btn ${globalFilter === 'daily' ? 'active' : ''}`}
                         onClick={() => setGlobalFilter('daily')}
@@ -152,7 +156,7 @@ const Stats = () => {
                         <h3 className="chart-title">Status vs Call Count</h3>
                     </div>
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={statusBreakdown}>
+                        <BarChart data={currentStatusBreakdown}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                             <XAxis dataKey="status" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
@@ -170,7 +174,7 @@ const Stats = () => {
                         <h3 className="chart-title">Campaigns Progress Report</h3>
                     </div>
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={campaignProgress} layout="vertical" barSize={16}>
+                        <BarChart data={currentCampaignProgress} layout="vertical" barSize={16}>
                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                             <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                             <YAxis
@@ -190,55 +194,6 @@ const Stats = () => {
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
-
-            {/* Book Appointment Table */}
-            <div className="table-card">
-                <div className="table-header">
-                    <h3 className="table-title">Book Appointments</h3>
-                    <input
-                        type="date"
-                        className="date-picker"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                    />
-                </div>
-                <table className="stats-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Date</th>
-                            <th>Customer Name</th>
-                            <th>Phone</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredTableData.length > 0 ? (
-                            filteredTableData.map((item) => (
-                                <tr key={item.id}>
-                                    <td>#{item.id}</td>
-                                    <td>{item.date}</td>
-                                    <td>{item.name}</td>
-                                    <td>{item.phone}</td>
-                                    <td>{item.email}</td>
-                                    <td>
-                                        <span className={`status-badge status-${item.status.toLowerCase()}`}>
-                                            {item.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                                    No appointments found for this date.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
             </div>
         </div>
     );
