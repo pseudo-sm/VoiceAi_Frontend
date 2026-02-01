@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select';
-import {createCampaign,getCampaigns} from "./CampignService";
+import {createCampaign,getCampaigns,startCampaign,scheduleCampaign} from "./CampignService";
 import {
   Search,
   Upload,
@@ -50,6 +50,7 @@ const [modelOpen, setModelOpen] = useState(false);
 const [editModelOpen, setEditMModelOpen] = useState(false);
 const [campaigns, setCampaigns] = useState([]);
 const [selectedCampaignId, setSelectedCampaignId] = useState(null);
+const [actionLoading, setActionLoading] = useState({});
 const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState(null);
 const [campaign, setCampaign] = useState({
@@ -62,44 +63,43 @@ const [campaign, setCampaign] = useState({
   endTime: ""
 });
 
-useEffect(() => {
-  // Fetch campaigns on component mount
-  const fetchCampaigns = async () => {    
-    try {
-      const response = await getCampaigns({
-        skip: 0,
-        limit: 100,
-        includeDetails: false,
-      });
-      const normalizedCampaigns = response.data.campaigns.map((item) => ({
-        id: item.cid,
-        name: item.campaign_name,
-        description: item.description,
-        narrative: item.narrative_id, 
-        startDate: item.start_date,
-        startTime: item.start_time,
-        endDate: item.end_date,
-        endTime: item.end_time,
-        statusFromApi: item.status,
-        days: {
-          monday: item.is_monday,
-          tuesday: item.is_tuesday,
-          wednesday: item.is_wednesday,
-          thursday: item.is_thursday,
-          friday: item.is_friday,
-          saturday: item.is_saturday,
-          sunday: item.is_sunday,
-        },
-        campaignFile: item.campaign_file,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-      }));
-      setCampaigns(normalizedCampaigns);
-    } catch (error) {
-      console.error("Error fetching campaigns:", error);
-    } 
-  };
+const fetchCampaigns = async () => {
+  try {
+    const response = await getCampaigns({
+      skip: 0,
+      limit: 100,
+      includeDetails: false,
+    });
+    const normalizedCampaigns = response.data.campaigns.map((item) => ({
+      id: item.cid,
+      name: item.campaign_name,
+      description: item.description,
+      narrative: item.narrative_id,
+      startDate: item.start_date,
+      startTime: item.start_time,
+      endDate: item.end_date,
+      endTime: item.end_time,
+      statusFromApi: item.status,
+      days: {
+        monday: item.is_monday,
+        tuesday: item.is_tuesday,
+        wednesday: item.is_wednesday,
+        thursday: item.is_thursday,
+        friday: item.is_friday,
+        saturday: item.is_saturday,
+        sunday: item.is_sunday,
+      },
+      campaignFile: item.campaign_file,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
+    setCampaigns(normalizedCampaigns);
+  } catch (error) {
+    console.error("Error fetching campaigns:", error);
+  }
+};
 
+useEffect(() => {
   fetchCampaigns();
 }, []);
 const handleCreate = async () => {
@@ -338,6 +338,34 @@ const handleUpdate = () => {
   setSelectedCampaignId(null);
 };
 
+const handleStartCampaign = async (campaignId) => {
+  setActionLoading((prev) => ({ ...prev, [campaignId]: "start" }));
+  try {
+    await startCampaign(campaignId);
+    toast.success("Campaign started");
+    await fetchCampaigns();
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    toast.error("Failed to start campaign");
+  } finally {
+    setActionLoading((prev) => ({ ...prev, [campaignId]: null }));
+  }
+};
+
+const handleScheduleCampaign = async (campaignId) => {
+  setActionLoading((prev) => ({ ...prev, [campaignId]: "schedule" }));
+  try {
+    await scheduleCampaign(campaignId);
+    toast.success("Campaign scheduled");
+    await fetchCampaigns();
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    toast.error("Failed to schedule campaign");
+  } finally {
+    setActionLoading((prev) => ({ ...prev, [campaignId]: null }));
+  }
+};
+
   const currentData = [
     {
       id: 1,
@@ -407,12 +435,12 @@ const handleUpdate = () => {
 
   const now = new Date();
 
-  const status =
-    startDT && now < startDT
-      ? "Upcoming"
-      : endDT && now > endDT
-      ? "Completed"
-      : "Active";
+  // const status =
+  //   startDT && now < startDT
+  //     ? "Upcoming"
+  //     : endDT && now > endDT
+  //     ? "Completed"
+  //     : "Active";
 
   return (
     <tr key={item.id} >
@@ -436,20 +464,18 @@ const handleUpdate = () => {
 
       <td>{item.endDate || "-"}</td>
       <td>{item.endTime || "-"}</td>
-      <td>{item.endTime || "-"}</td>
-
 
       <td>
         <span
           className={`status-badge ${
-            status === "Upcoming"
+            item.statusFromApi === "Upcoming"
               ? "status-pending"
-              : status === "Completed"
+              : item.statusFromApi === "Completed"
               ? "status-done"
               : "status-active"
           }`}
         >
-          {status}
+          {item.statusFromApi}
         </span>
       </td>
 
@@ -460,6 +486,20 @@ const handleUpdate = () => {
             onClick={() => handleView(item)}
           >
             <Pencil />
+          </button>
+          <button
+            className="action-btn action-start"
+            onClick={() => handleStartCampaign(item.id)}
+            disabled={actionLoading[item.id] === "start"}
+          >
+            {actionLoading[item.id] === "start" ? "Starting..." : "Start"}
+          </button>
+          <button
+            className="action-btn action-schedule"
+            onClick={() => handleScheduleCampaign(item.id)}
+            disabled={actionLoading[item.id] === "schedule"}
+          >
+            {actionLoading[item.id] === "schedule" ? "Scheduling..." : "Schedule"}
           </button>
         </div>
       </td>

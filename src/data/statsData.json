@@ -1,5 +1,32 @@
 {
     "summary": {
+        "all": {
+            "totalCalls": {
+                "value": 2890,
+                "trend": 18.2,
+                "isIncrease": true
+            },
+            "answered": {
+                "value": 1974,
+                "trend": 12.4,
+                "isIncrease": true
+            },
+            "totalCampaigns": {
+                "value": 68,
+                "trend": 11.6,
+                "isIncrease": true
+            },
+            "avgCallDuration": {
+                "value": "3m 9s",
+                "trend": 6.4,
+                "isIncrease": true
+            },
+            "totalCallMinutes": {
+                "value": 7421,
+                "trend": 7.9,
+                "isIncrease": true
+            }
+        },
         "daily": {
             "totalCalls": {
                 "value": 45,
@@ -82,42 +109,154 @@
             }
         }
     },
-    "statusBreakdown": [
-        {
-            "status": "Answered",
-            "count": 856
-        },
-        {
-            "status": "Missed",
-            "count": 220
-        },
-        {
-            "status": "Rejected",
-            "count": 169
-        }
-    ],
-    "campaignProgress": [
-        {
-            "name": "Insurance Renewal",
-            "completed": 160,
-            "pending": 40
-        },
-        {
-            "name": "Service Reminder",
-            "completed": 210,
-            "pending": 60
-        },
-        {
-            "name": "Test Drive Follow-up",
-            "completed": 95,
-            "pending": 25
-        },
-        {
-            "name": "Feedback Collection",
-            "completed": 130,
-            "pending": 30
-        }
-    ],
+    "statusBreakdown": {
+        "all": [
+            {
+                "status": "Answered",
+                "count": 1974
+            },
+            {
+                "status": "Missed",
+                "count": 518
+            },
+            {
+                "status": "Rejected",
+                "count": 398
+            }
+        ],
+        "daily": [
+            {
+                "status": "Answered",
+                "count": 32
+            },
+            {
+                "status": "Missed",
+                "count": 9
+            },
+            {
+                "status": "Rejected",
+                "count": 4
+            }
+        ],
+        "weekly": [
+            {
+                "status": "Answered",
+                "count": 186
+            },
+            {
+                "status": "Missed",
+                "count": 56
+            },
+            {
+                "status": "Rejected",
+                "count": 30
+            }
+        ],
+        "monthly": [
+            {
+                "status": "Answered",
+                "count": 856
+            },
+            {
+                "status": "Missed",
+                "count": 250
+            },
+            {
+                "status": "Rejected",
+                "count": 139
+            }
+        ]
+    },
+    "campaignProgress": {
+        "all": [
+            {
+                "name": "Insurance Renewal",
+                "completed": 560,
+                "pending": 120
+            },
+            {
+                "name": "Service Reminder",
+                "completed": 720,
+                "pending": 180
+            },
+            {
+                "name": "Test Drive Follow-up",
+                "completed": 310,
+                "pending": 90
+            },
+            {
+                "name": "Feedback Collection",
+                "completed": 384,
+                "pending": 110
+            }
+        ],
+        "daily": [
+            {
+                "name": "Insurance Renewal",
+                "completed": 16,
+                "pending": 4
+            },
+            {
+                "name": "Service Reminder",
+                "completed": 21,
+                "pending": 6
+            },
+            {
+                "name": "Test Drive Follow-up",
+                "completed": 9,
+                "pending": 3
+            },
+            {
+                "name": "Feedback Collection",
+                "completed": 13,
+                "pending": 2
+            }
+        ],
+        "weekly": [
+            {
+                "name": "Insurance Renewal",
+                "completed": 80,
+                "pending": 20
+            },
+            {
+                "name": "Service Reminder",
+                "completed": 110,
+                "pending": 28
+            },
+            {
+                "name": "Test Drive Follow-up",
+                "completed": 45,
+                "pending": 12
+            },
+            {
+                "name": "Feedback Collection",
+                "completed": 55,
+                "pending": 15
+            }
+        ],
+        "monthly": [
+            {
+                "name": "Insurance Renewal",
+                "completed": 160,
+                "pending": 40
+            },
+            {
+                "name": "Service Reminder",
+                "completed": 210,
+                "pending": 60
+            },
+            {
+                "name": "Test Drive Follow-up",
+                "completed": 95,
+                "pending": 25
+            },
+            {
+                "name": "Feedback Collection",
+                "completed": 130,
+                "pending": 30
+            }
+        ]
+    },
     "appointments": {
         "booked": {
             "value": 145,
