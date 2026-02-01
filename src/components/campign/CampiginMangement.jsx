@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select';
-import {createCampaign,getCampaigns,startCampaign,scheduleCampaign} from "./CampignService";
+import {createCampaign,getCampaigns,updateCampaign} from "./CampignService";
 import {
   Search,
   Upload,
@@ -336,31 +336,49 @@ const handleUpdate = () => {
   setSelectedCampaignId(null);
 };
 
-const handleStartCampaign = async (campaignId) => {
-  setActionLoading((prev) => ({ ...prev, [campaignId]: "start" }));
-  try {
-    await startCampaign(campaignId);
-    toast.success("Campaign started");
-    await fetchCampaigns();
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    toast.error("Failed to start campaign");
-  } finally {
-    setActionLoading((prev) => ({ ...prev, [campaignId]: null }));
-  }
-};
+const handleToggleStatus = async (item) => {
+  const isDisabled = String(item.statusFromApi || "").toLowerCase() === "disabled";
+  const nextStatus = isDisabled ? "active" : "disabled";
+  setActionLoading((prev) => ({ ...prev, [item.id]: "toggle" }));
 
-const handleScheduleCampaign = async (campaignId) => {
-  setActionLoading((prev) => ({ ...prev, [campaignId]: "schedule" }));
+  const formData = new FormData();
+  formData.append("campaign_status", nextStatus);
+  formData.append("campaign_name", item.name || "");
+  formData.append("description", item.description || "");
+  formData.append("narrative_id", item.narrative || "");
+  formData.append("start_date", item.startDate || "");
+  formData.append("start_time", item.startTime || "");
+  formData.append("end_date", item.endDate || "");
+  formData.append("end_time", item.endTime || "");
+  formData.append("enterprise_id", item.enterpriseId || 1);
+  formData.append("updated_by", 1);
+  formData.append("is_monday", Boolean(item.days?.monday));
+  formData.append("is_tuesday", Boolean(item.days?.tuesday));
+  formData.append("is_wednesday", Boolean(item.days?.wednesday));
+  formData.append("is_thursday", Boolean(item.days?.thursday));
+  formData.append("is_friday", Boolean(item.days?.friday));
+  formData.append("is_saturday", Boolean(item.days?.saturday));
+  formData.append("is_sunday", Boolean(item.days?.sunday));
+
+  if (item.campaignFile instanceof File) {
+    formData.append("file", item.campaignFile);
+  }
+
   try {
-    await scheduleCampaign(campaignId);
-    toast.success("Campaign scheduled");
-    await fetchCampaigns();
+    await updateCampaign(item.id, formData);
+    setCampaigns((prev) =>
+      prev.map((campaign) =>
+        campaign.id === item.id
+          ? { ...campaign, statusFromApi: nextStatus === "active" ? "Active" : "Disabled" }
+          : campaign
+      )
+    );
+    toast.success(`Campaign ${nextStatus}`);
   } catch (error) {
     console.error(error.response?.data || error.message);
-    toast.error("Failed to schedule campaign");
+    toast.error("Failed to update campaign status");
   } finally {
-    setActionLoading((prev) => ({ ...prev, [campaignId]: null }));
+    setActionLoading((prev) => ({ ...prev, [item.id]: null }));
   }
 };
 
@@ -397,7 +415,7 @@ const handleScheduleCampaign = async (campaignId) => {
   return (
     <div className="CampiginMangement-b">
         <div>
-<h1>Campigin Management</h1>
+<h1>Campaign Management</h1>
 <button className="action-button upload-button" onClick={()=>{setModelOpen(true)}}>Create Campigin</button>
         </div>
       
@@ -441,7 +459,7 @@ const handleScheduleCampaign = async (campaignId) => {
   //     : "Active";
 
   return (
-    <tr key={item.id} >
+    <tr key={item.id} className={`campaign-row ${String(item.statusFromApi || "").toLowerCase() === "disabled" ? "row-disabled" : ""}`} >
       <td  onClick={() => { console.log(item); navigate("/dashboard", { state: item })}} style={{cursor:"pointer"}}>
         <div className="customer-cell">
           {/* <div className="avatar">
@@ -485,20 +503,15 @@ const handleScheduleCampaign = async (campaignId) => {
           >
             <Pencil />
           </button>
-          <button
-            className="action-btn action-start"
-            onClick={() => handleStartCampaign(item.id)}
-            disabled={actionLoading[item.id] === "start"}
-          >
-            {actionLoading[item.id] === "start" ? "Starting..." : "Start"}
-          </button>
-          <button
-            className="action-btn action-schedule"
-            onClick={() => handleScheduleCampaign(item.id)}
-            disabled={actionLoading[item.id] === "schedule"}
-          >
-            {actionLoading[item.id] === "schedule" ? "Scheduling..." : "Schedule"}
-          </button>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={String(item.statusFromApi || "").toLowerCase() !== "disabled"}
+              onChange={() => handleToggleStatus(item)}
+              disabled={actionLoading[item.id] === "toggle"}
+            />
+            <span className="toggle-slider" />
+          </label>
         </div>
       </td>
     </tr>
