@@ -395,12 +395,16 @@ const Dashboard = () => {
           <p className="header-subtitle">Display all the customers.</p>
         </div>
         <button
-          className="action-button upload-button"
-          onClick={() => setIsUploadModalOpen(true)}
-        >
-          <Upload size={20} />
-          <span>Upload Data</span>
-        </button>
+            className="action-button upload-button"
+            onClick={() =>{
+              // console.log("Download file url:", state.campaignFile);
+               window.open(state.campaignFile, "_blank");
+              //  setIsUploadModalOpen(true)
+            }}
+          >
+            <Download size={20} />
+            <span>Download</span>
+          </button>
       </div>
 
       {/* Summary Cards */}
