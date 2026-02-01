@@ -11,14 +11,19 @@
                 "trend": 3.1,
                 "isIncrease": true
             },
-            "rejected": {
-                "value": 13,
-                "trend": 1.2,
-                "isIncrease": false
+            "totalCampaigns": {
+                "value": 6,
+                "trend": 4.5,
+                "isIncrease": true
             },
-            "duration": {
-                "value": "2h 15m",
+            "avgCallDuration": {
+                "value": "3m 2s",
                 "trend": 2.5,
+                "isIncrease": true
+            },
+            "totalCallMinutes": {
+                "value": 135,
+                "trend": 3.4,
                 "isIncrease": true
             }
         },
@@ -33,14 +38,19 @@
                 "trend": 8.2,
                 "isIncrease": true
             },
-            "rejected": {
-                "value": 86,
-                "trend": 2.4,
-                "isIncrease": false
+            "totalCampaigns": {
+                "value": 14,
+                "trend": 6.3,
+                "isIncrease": true
             },
-            "duration": {
-                "value": "14h 32m",
+            "avgCallDuration": {
+                "value": "3m 18s",
                 "trend": 5.7,
+                "isIncrease": true
+            },
+            "totalCallMinutes": {
+                "value": 945,
+                "trend": 4.8,
                 "isIncrease": true
             }
         },
@@ -55,104 +65,59 @@
                 "trend": 10.1,
                 "isIncrease": true
             },
-            "rejected": {
-                "value": 389,
-                "trend": 4.5,
-                "isIncrease": false
+            "totalCampaigns": {
+                "value": 48,
+                "trend": 9.1,
+                "isIncrease": true
             },
-            "duration": {
-                "value": "48h 32m",
+            "avgCallDuration": {
+                "value": "3m 12s",
                 "trend": 7.8,
+                "isIncrease": true
+            },
+            "totalCallMinutes": {
+                "value": 5824,
+                "trend": 6.1,
                 "isIncrease": true
             }
         }
     },
-    "callTrends": {
-        "1W": [
-            {
-                "name": "Mon",
-                "calls": 45
-            },
-            {
-                "name": "Tue",
-                "calls": 52
-            },
-            {
-                "name": "Wed",
-                "calls": 38
-            },
-            {
-                "name": "Thu",
-                "calls": 65
-            },
-            {
-                "name": "Fri",
-                "calls": 48
-            },
-            {
-                "name": "Sat",
-                "calls": 25
-            },
-            {
-                "name": "Sun",
-                "calls": 15
-            }
-        ],
-        "2W": [
-            {
-                "name": "Week 1",
-                "calls": 288
-            },
-            {
-                "name": "Week 2",
-                "calls": 315
-            }
-        ],
-        "1M": [
-            {
-                "name": "Week 1",
-                "calls": 288
-            },
-            {
-                "name": "Week 2",
-                "calls": 315
-            },
-            {
-                "name": "Week 3",
-                "calls": 290
-            },
-            {
-                "name": "Week 4",
-                "calls": 352
-            }
-        ],
-        "6M": [
-            {
-                "name": "Aug",
-                "calls": 1100
-            },
-            {
-                "name": "Sep",
-                "calls": 1250
-            },
-            {
-                "name": "Oct",
-                "calls": 1180
-            },
-            {
-                "name": "Nov",
-                "calls": 1350
-            },
-            {
-                "name": "Dec",
-                "calls": 1420
-            },
-            {
-                "name": "Jan",
-                "calls": 1245
-            }
-        ]
-    },
+    "statusBreakdown": [
+        {
+            "status": "Answered",
+            "count": 856
+        },
+        {
+            "status": "Missed",
+            "count": 220
+        },
+        {
+            "status": "Rejected",
+            "count": 169
+        }
+    ],
+    "campaignProgress": [
+        {
+            "name": "Insurance Renewal",
+            "completed": 160,
+            "pending": 40
+        },
+        {
+            "name": "Service Reminder",
+            "completed": 210,
+            "pending": 60
+        },
+        {
+            "name": "Test Drive Follow-up",
+            "completed": 95,
+            "pending": 25
+        },
+        {
+            "name": "Feedback Collection",
+            "completed": 130,
+            "pending": 30
+        }
+    ],
     "appointments": {
         "booked": {
             "value": 145,

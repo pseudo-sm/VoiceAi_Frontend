@@ -8,6 +8,7 @@ import Profile from './components/profile/Profile';
 import Test from './components/test/Test';
 import MainLayout from './components/layout/MainLayout';
 import CampiginMangement from './components/campign/CampiginMangement';
+import Report from './components/report/Report';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/test" element={<Test />} />
           <Route path="/campign" element={<CampiginMangement />} />
+          <Route path="/report" element={<Report />} />
         </Route>
       </Routes>
     </Router>

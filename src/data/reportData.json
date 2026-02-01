@@ -1,0 +1,68 @@
+[
+    {
+        "callId": 1001,
+        "campaignId": 501,
+        "narrativeName": "Service Outbound",
+        "callDuration": "3m 14s",
+        "startDateTime": "2026-02-01 10:14 AM",
+        "creditSpent": 12.5,
+        "downloadUrl": "https://example.com/recordings/1001.mp3",
+        "customerName": "Aisha Khan",
+        "customerEmail": "aisha.khan@example.com",
+        "customerPhone": "+91 98765 43210",
+        "status": "Completed"
+    },
+    {
+        "callId": 1002,
+        "campaignId": 503,
+        "narrativeName": "Service Inbound",
+        "callDuration": "2m 42s",
+        "startDateTime": "2026-02-01 11:05 AM",
+        "creditSpent": 9.8,
+        "downloadUrl": "https://example.com/recordings/1002.mp3",
+        "customerName": "Rahul Mehta",
+        "customerEmail": "rahul.mehta@example.com",
+        "customerPhone": "+91 99887 66554",
+        "status": "Completed"
+    },
+    {
+        "callId": 1003,
+        "campaignId": 504,
+        "narrativeName": "Service Outbound",
+        "callDuration": "4m 01s",
+        "startDateTime": "2026-02-01 12:20 PM",
+        "creditSpent": 15.2,
+        "downloadUrl": "https://example.com/recordings/1003.mp3",
+        "customerName": "Sneha Iyer",
+        "customerEmail": "sneha.iyer@example.com",
+        "customerPhone": "+91 91234 56789",
+        "status": "Completed"
+    },
+    {
+        "callId": 1004,
+        "campaignId": 505,
+        "narrativeName": "Service Inbound",
+        "callDuration": "1m 55s",
+        "startDateTime": "2026-02-01 01:47 PM",
+        "creditSpent": 7.4,
+        "downloadUrl": "https://example.com/recordings/1004.mp3",
+        "customerName": "Vikram Rao",
+        "customerEmail": "vikram.rao@example.com",
+        "customerPhone": "+91 90123 45678",
+        "status": "Pending"
+    },
+    {
+        "callId": 1005,
+        "campaignId": 503,
+        "narrativeName": "Service Outbound",
+        "callDuration": "3m 28s",
+        "startDateTime": "2026-02-01 03:12 PM",
+        "creditSpent": 13.1,
+        "downloadUrl": "https://example.com/recordings/1005.mp3",
+        "customerName": "Neha Patel",
+        "customerEmail": "neha.patel@example.com",
+        "customerPhone": "+91 90909 12345",
+        "status": "Completed"
+    }
+]
+
