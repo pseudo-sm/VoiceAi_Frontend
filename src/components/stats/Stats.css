@@ -8,6 +8,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
 }
 
 .stats-title {
@@ -15,6 +16,24 @@
     font-weight: 700;
     color: #1e293b;
     margin: 0;
+}
+
+.stats-loading,
+.stats-error {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.stats-loading {
+    color: #64748b;
+}
+
+.stats-error {
+    color: #b91c1c;
+    background: #fee2e2;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid #fecaca;
 }
 
 /* Segmented Control for Global Filter */
@@ -125,7 +144,7 @@
 /* Charts Section */
 .charts-row {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem;
 }
 
