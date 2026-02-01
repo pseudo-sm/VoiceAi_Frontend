@@ -1,0 +1,31 @@
+[
+    {
+        "id": 101,
+        "userName": "Aisha Khan",
+        "email": "aisha.khan@example.com",
+        "enterpriseId": 1,
+        "createdAt": "2025-11-05"
+    },
+    {
+        "id": 102,
+        "userName": "Rahul Mehta",
+        "email": "rahul.mehta@example.com",
+        "enterpriseId": 1,
+        "createdAt": "2025-12-12"
+    },
+    {
+        "id": 103,
+        "userName": "Sneha Iyer",
+        "email": "sneha.iyer@example.com",
+        "enterpriseId": 2,
+        "createdAt": "2026-01-08"
+    },
+    {
+        "id": 104,
+        "userName": "Vikram Rao",
+        "email": "vikram.rao@example.com",
+        "enterpriseId": 2,
+        "createdAt": "2026-01-19"
+    }
+]
+
