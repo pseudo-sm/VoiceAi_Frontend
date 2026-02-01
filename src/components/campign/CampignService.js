@@ -11,7 +11,7 @@ export const createCampaign = (formData) => {
   });
 };
 
-export const getCampaigns = ({ skip = 0, limit = 100, includeDetails = false }) => {
+export const getCampaigns = ({ skip = 0, limit = 100, includeDetails = true }) => {
   return axios.get(API_URL, {
     params: {
       skip,
@@ -23,3 +23,5 @@ export const getCampaigns = ({ skip = 0, limit = 100, includeDetails = false }) 
     },
   });
 };
+
+

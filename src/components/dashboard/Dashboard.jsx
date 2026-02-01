@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { toast } from "react-toastify";
-
+import {fetchCustomers,uploadCustomersCsv} from "./Dashbord.js";
 import {
   Search,
   Upload,
@@ -85,8 +85,9 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedActivityId, setExpandedActivityId] = useState(null);
-
   const { state } = useLocation(); // state === item
+  const [customers, setCustomers] = useState([]);
+const [total, setTotal] = useState(0);
 
   console.log("in Dashbord", state); // your item object
   // Enhanced Dummy Data
@@ -224,6 +225,69 @@ const Dashboard = () => {
     },
   ];
 
+
+  
+ useEffect(() => {
+  if (!state?.id) return;
+
+  const fetchCampaigns = async () => {
+    try {
+      console.log("Fetching customers for campaignId:", state.id);
+
+      const response = await fetchCustomers({
+        campaignId: state.id,
+        limit: 100,
+        include_campaign: false,
+      });
+
+      console.log("Fetched customers:", response);
+        setCustomers(response.customers);
+      setTotal(response.total);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  fetchCampaigns();
+}, [state?.id]); // 🔥 important dependency
+
+
+
+
+
+const handleUploadCsv = async (campaignId) => {
+
+  console.log("Uploading CSV for campaignId:", campaignId, selectedFile);
+  try {
+
+
+    // setUploading(true);
+
+    const response = await uploadCustomersCsv({
+      campaignId:state.id,
+      file: selectedFile,
+      replace_existing: true,
+    });
+
+    console.log("CSV upload success:", response);
+
+    alert("Customers uploaded successfully!");
+
+   
+    const refreshedData = await fetchCustomers({
+      campaignId,
+      limit: 100,
+    });
+    setCustomers(refreshedData.customers);
+
+  } catch (error) {
+    console.error("CSV upload failed:", error);
+    // alert("CSV upload failed");
+  } finally {
+    setUploading(false);
+  }
+};
+
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -236,13 +300,16 @@ const Dashboard = () => {
   };
 
   const handleUpload = () => {
+    console.log("Uploading file for campaignId:", state.id);
+    handleUploadCsv(state.id);
     if (!selectedFile) return;
 
     // Simulate upload for now
     toast.info(`Uploading ${selectedFile.name}...`);
     setTimeout(() => {
       setIsUploadModalOpen(false);
-      setSelectedFile(null);
+      handleUploadCsv(state.id);
+      // setSelectedFile(null);
       toast.success("File uploaded successfully!");
     }, 1000);
   };
@@ -255,11 +322,24 @@ const Dashboard = () => {
       item.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+
+
+
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  // const currentData = filteredData.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage,
+  // );
+
+  const currentData = customers.map((c) => ({
+  id: c.campaign_customer_id,
+  name: c.customer_name,
+  email: c.email,
+  vehicleName: `${c.vehicle_brand} ${c.vehicle_make_model}`,
+  vehicleNo: c.phone_number, // change if you get real vehicle no later
+  status: c.is_free_service ? "Done" : "Pending",
+  lastCalled: c.last_service_date,
+}));
 
   const getInitials = (name) => {
     const names = name.split(" ");
@@ -394,13 +474,29 @@ const Dashboard = () => {
           <h1>Customers</h1>
           <p className="header-subtitle">Display all the customers.</p>
         </div>
-        <button
-          className="action-button upload-button"
-          onClick={() => setIsUploadModalOpen(true)}
-        >
-          <Upload size={20} />
-          <span>Upload Data</span>
-        </button>
+        <div style={{"display":"flex",gap:"10px"}}>
+          <button
+            className="action-button upload-button"
+            onClick={() => {
+              setIsUploadModalOpen(true);
+            }}
+          >
+            <Upload size={20} />
+            <span>Upload Data</span>
+          </button>
+          
+          <button
+            className="action-button upload-button"
+            onClick={() =>{
+              // console.log("Download file url:", state.campaignFile);
+               window.open(state.campaignFile, "_blank");
+              //  setIsUploadModalOpen(true)
+            }}
+          >
+            <Download size={20} />
+            <span>Download</span>
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -411,7 +507,7 @@ const Dashboard = () => {
           </div>
           <div className="summary-details">
             <span className="summary-label">Total Customers</span>
-            <span className="summary-value">{dummyData.length}</span>
+            <span className="summary-value">{total}</span>
           </div>
         </div>
         <div className="summary-card">
@@ -484,7 +580,7 @@ const Dashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {currentData.map((item) => (
+            {/* {currentData.map((item) => (
               <tr key={item.id}>
                 <td>
                   <div className="customer-cell">
@@ -522,7 +618,48 @@ const Dashboard = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+            ))} */}
+            {currentData.map((item) => (
+  <tr key={item.id}>
+    <td>
+      <div className="customer-cell">
+        <div className="avatar">{getInitials(item.name)}</div>
+        <div className="customer-info">
+          <span className="customer-name">{item.name}</span>
+          <span className="customer-email">{item.email}</span>
+        </div>
+      </div>
+    </td>
+
+    <td>{item.vehicleName}</td>
+
+    <td>{item.vehicleNo}</td>
+
+    <td>
+      <span
+        className={`status-badge ${
+          item.status === "Done" ? "status-done" : "status-pending"
+        }`}
+      >
+        {item.status}
+      </span>
+    </td>
+
+    <td>{formatDate(item.lastCalled)}</td>
+
+    <td>
+      <div className="action-buttons">
+        <button className="action-link" onClick={() => handleView(item)}>
+          View
+        </button>
+        <button className="action-link" onClick={() => handleDownload(item)}>
+          Download
+        </button>
+      </div>
+    </td>
+  </tr>
+))}
+
             {currentData.length === 0 && (
               <tr>
                 <td
