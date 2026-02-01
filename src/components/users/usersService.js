@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const USERS_API_URL = `${API_BASE_URL}/users`;
 
-export const getUsers = ({ skip = 0, limit = 100, includeRoles = false }) => {
+export const getUsers = ({ skip = 0, limit = 100, includeRoles = true }) => {
   return axios.get(USERS_API_URL, {
     params: {
       skip,

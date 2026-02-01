@@ -30,14 +30,18 @@ const UserManagement = () => {
     const [newPassword, setNewPassword] = useState('');
     const [roles, setRoles] = useState([]);
 
-    const normalizeUser = (item) => ({
-        id: item.id ?? item.user_id ?? item.uid ?? item.cid ?? item.userId,
-        userName: item.user_name ?? item.name ?? item.userName ?? '',
-        email: item.email ?? '',
-        enterpriseId: item.enterprise_id ?? item.enterpriseId ?? '',
-        roleName: item.role_name ?? item.roleName ?? item.role ?? '',
-        createdAt: item.created_at ?? item.createdAt ?? ''
-    });
+    const normalizeUser = (item) => {
+        const roles = Array.isArray(item.roles) ? item.roles : [];
+        const roleNames = roles.map((role) => role.role_name).filter(Boolean);
+        return {
+            id: item.id ?? item.user_id ?? item.uid ?? item.cid ?? item.userId,
+            userName: item.user_name ?? item.name ?? item.userName ?? '',
+            email: item.email ?? '',
+            enterpriseId: item.enterprise_id ?? item.enterpriseId ?? '',
+            roleName: roleNames.length > 0 ? roleNames.join(', ') : '',
+            createdAt: item.created_at ?? item.createdAt ?? ''
+        };
+    };
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -45,8 +49,8 @@ const UserManagement = () => {
             setLoadError(null);
 
             try {
-                const data = await getUsers({ skip: 0, limit: 100, includeRoles: false });
-                const rawUsers = data?.data?.users || data?.data || data?.users || data || [];
+                const data = await getUsers({ skip: 0, limit: 100, includeRoles: true });
+                const rawUsers = data?.data?.users || data?.users || [];
                 setUsers(rawUsers.map(normalizeUser));
             } catch (error) {
                 console.error('Failed to load users:', error);
@@ -138,8 +142,8 @@ const UserManagement = () => {
             toast.success('User created');
             setIsCreateOpen(false);
             setNewUser({ userName: '', email: '', enterpriseId: 1, password: '', roleName: '' });
-            const data = await getUsers({ skip: 0, limit: 100, includeRoles: false });
-            const rawUsers = data?.data?.users || data?.data || data?.users || data || [];
+            const data = await getUsers({ skip: 0, limit: 100, includeRoles: true });
+            const rawUsers = data?.data?.users || data?.users || [];
             setUsers(rawUsers.map(normalizeUser));
         } catch (error) {
             console.error('Failed to create user:', error);
