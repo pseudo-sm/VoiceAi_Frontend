@@ -1,7 +1,10 @@
-import React,{useState,useRef} from "react";
+import React,{useState,useRef, useEffect} from "react";
 import "./CampiginMangement.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { MultiSelect } from 'primereact/multiselect';
+import Select from 'react-select';
+import {createCampaign,getCampaigns} from "./CampignService";
 import {
   Search,
   Upload,
@@ -16,9 +19,33 @@ import {
   Phone,
   CheckCircle,
   Clock,
+  Import,
 } from "lucide-react";
 const CampiginMangement = () => {
 
+const options = [
+  { label: 'All', value: 'all' },
+  { label: 'This Week', value: 'last_7_days' },
+  { label: 'This Month', value: 'last_month' }
+];
+
+
+  const monthOptions = [
+  { value: 'january', label: 'January' },
+  { value: 'february', label: 'February' },
+  { value: 'march', label: 'March' },
+  { value: 'april', label: 'April' },
+  { value: 'may', label: 'May' },
+  { value: 'june', label: 'June' },
+  { value: 'july', label: 'July' },
+  { value: 'august', label: 'August' },
+  { value: 'september', label: 'September' },
+  { value: 'october', label: 'October' },
+  { value: 'november', label: 'November' },
+  { value: 'december', label: 'December' }
+];
+    const [selected, setSelected] = useState("");
+const [selectedCities, setSelectedCities] = useState([]);
 const [modelOpen, setModelOpen] = useState(false);
 const [editModelOpen, setEditMModelOpen] = useState(false);
 const [campaigns, setCampaigns] = useState([]);
@@ -34,8 +61,152 @@ const [campaign, setCampaign] = useState({
   endTime: ""
 });
 
+useEffect(() => {
+  // Fetch campaigns on component mount
+  const fetchCampaigns = async () => {    
+    try {
+      const response = await getCampaigns({
+        skip: 0,
+        limit: 100,
+        includeDetails: false,
+      });
+      const normalizedCampaigns = response.data.campaigns.map((item) => ({
+        id: item.cid,
+        name: item.campaign_name,
+        description: item.description,
+        narrative: item.narrative_id, 
+        startDate: item.start_date,
+        startTime: item.start_time,
+        endDate: item.end_date,
+        endTime: item.end_time,
+        statusFromApi: item.status,
+        days: {
+          monday: item.is_monday,
+          tuesday: item.is_tuesday,
+          wednesday: item.is_wednesday,
+          thursday: item.is_thursday,
+          friday: item.is_friday,
+          saturday: item.is_saturday,
+          sunday: item.is_sunday,
+        },
+        campaignFile: item.campaign_file,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+      setCampaigns(normalizedCampaigns);
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+    } 
+  };
 
-const handleCreate = () => {
+  fetchCampaigns();
+}, []);
+const handleCreate = async () => {
+
+  console.log(
+"alldata",
+    campaign,
+    selectedDays,
+    fileInputRef.current.files[0]
+
+  )
+  
+  const formData = new FormData();
+    formData.append("id", 10);
+  formData.append("campaign_name", campaign.name);
+  formData.append("campaign_status", "active");
+  formData.append("enterprise_id", 1);
+
+
+  formData.append("description", campaign.description);
+  formData.append("narrative_id", campaign.narrative);
+  formData.append("start_date", campaign.startDate);
+  formData.append("start_time", campaign.startTime);
+  formData.append("end_date", campaign.endDate);
+  formData.append("end_time", campaign.endTime);
+  formData.append("is_monday", selectedDays.includes("Monday"));
+  formData.append("is_tuesday", selectedDays.includes("Tuesday"));
+  formData.append("is_wednesday", selectedDays.includes("Wednesday"));
+  formData.append("is_thursday", selectedDays.includes("Thursday"));
+  formData.append("is_friday", selectedDays.includes("Friday"));
+  formData.append("is_saturday", selectedDays.includes("Saturday"));
+  formData.append("is_sunday", selectedDays.includes("Sunday"));
+  formData.append("created_at", "2026-02-01T10:30:45.123Z");
+  formData.append("updated_at", "2026-02-01T10:30:45.123Z");
+
+  if (fileInputRef.current && fileInputRef.current.files[0]) {
+    formData.append("file_url", fileInputRef.current.files[0]);
+  }
+
+  // const result = await createCampaign(formData);
+  // const response= await getCampaigns({ skip: 0, limit: 100, includeDetails: false });
+
+  try {
+  // 1️⃣ Create campaign
+  const result = await createCampaign(formData);
+
+  const response = await getCampaigns({
+    skip: 0,
+    limit: 100,
+    includeDetails: false,
+  });
+
+  console.log("getCampaigns response",response);
+
+  toast.success("Campaign created successfully");
+} catch (error) {
+
+  const response = await getCampaigns({
+  skip: 0,
+  limit: 100,
+  includeDetails: false,
+});
+
+const normalizedCampaigns = response.data.campaigns.map((item) => ({
+  id: item.cid,
+  name: item.campaign_name,
+  description: item.description,
+  narrative: item.narrative_id,
+
+  startDate: item.start_date,
+  startTime: item.start_time,
+  endDate: item.end_date,
+  endTime: item.end_time,
+
+  statusFromApi: item.status,
+
+  days: {
+    monday: item.is_monday,
+    tuesday: item.is_tuesday,
+    wednesday: item.is_wednesday,
+    thursday: item.is_thursday,
+    friday: item.is_friday,
+    saturday: item.is_saturday,
+    sunday: item.is_sunday,
+  },
+
+  campaignFile: item.campaign_file,
+  createdAt: item.created_at,
+  updatedAt: item.updated_at,
+}));
+
+setCampaigns(normalizedCampaigns);
+
+  console.error(error.response?.data || error.message);
+  toast.error("Failed to create campaign");
+}
+
+
+
+
+
+
+  console.log("getCampaigns response",response);
+  if (!result.success) {
+    toast.error("Failed to create campaign");
+    return;
+  }
+
   const newCampaign = {
     id: Date.now(),
     name: campaign.name,
@@ -62,7 +233,67 @@ const handleCreate = () => {
   });
 };
 
+const cities = [
+  { name: "New York", code: "NY" },
+  { name: "London", code: "LDN" },
+  { name: "Paris", code: "PRS" },
+  { name: "Tokyo", code: "TKY" },
+];
  const fileInputRef = useRef(null);
+// const options = [
+//   { id: 1, label: "React", value: "react" },
+//   { id: 2, label: "Vue", value: "vue" },
+//   { id: 3, label: "Angular", value: "angular" }
+// ];
+
+
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+];
+
+
+const [selectedDays, setSelectedDays] = useState([]);
+
+  const handleDayChange = (day) => {
+    setSelectedDays((prev) =>
+      prev.includes(day)
+        ? prev.filter((d) => d !== day)
+        : [...prev, day]
+    );
+    console.log(selectedDays);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDays.length === days.length) {
+      setSelectedDays([]);
+    } else {
+      setSelectedDays(days);
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleButtonClick = () => {
     fileInputRef.current.click();
@@ -203,6 +434,8 @@ const handleUpdate = () => {
 
       <td>{item.endDate || "-"}</td>
       <td>{item.endTime || "-"}</td>
+      <td>{item.endTime || "-"}</td>
+
 
       <td>
         <span
@@ -266,8 +499,20 @@ const handleUpdate = () => {
         </button>
       </div>
 
+      
+      
+      
       <div className="modal-body">
         <div className="form-group">
+          <label>Campaign Name</label>
+          <input
+            type="text"
+            name="name"
+            value={campaign.name}
+            onChange={handleChange}
+          />
+        </div>
+        {/* <div className="form-group">
           <label>Campaign Name</label>
           <input
             type="text"
@@ -276,13 +521,14 @@ const handleUpdate = () => {
             value={campaign.name}
             onChange={handleChange}
           />
-        </div>
-
+          
+        </div> */}
+  
         <div className="form-group">
           <label>Campaign Description</label>
           <textarea
             name="description"
-            placeholder="Enter description"
+          
             value={campaign.description}
             onChange={handleChange}
           />
@@ -292,7 +538,7 @@ const handleUpdate = () => {
           <label>Campaign Narrative</label>
           <textarea
             name="narrative"
-            placeholder="Enter narrative"
+            
             value={campaign.narrative}
             onChange={handleChange}
           />
@@ -328,6 +574,31 @@ const handleUpdate = () => {
     onChange={handleChange}
   />
 </div>
+     <div className="form-group" style={{  alignItems: "center",
+    justifyContent: "center"}}>
+      <>
+      <button
+        className="action-button upload-button"
+       style={{
+  height: "37px",
+  width: "200px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}}
+        onClick={handleButtonClick}
+      >
+        <Upload /> Upload file
+      </button>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+    </>
+</div>
 
 <div className="form-group">
   <label>End Time</label>
@@ -337,6 +608,42 @@ const handleUpdate = () => {
     value={campaign.endTime}
     onChange={handleChange}
   />
+</div>
+<div className="form-group">
+     <div className="form-group-checkbox">
+      {/* Select All */}
+      <label>
+        <input
+          type="checkbox"
+          checked={selectedDays.length === days.length}
+          onChange={handleSelectAll}
+        />
+        Select All
+      </label>
+
+      
+
+      {/* Day Checkboxes */}
+      <div className="dayn-div">
+        {days.map((day) => (
+          <div key={day}>
+            <label>
+              <input
+                type="checkbox"
+                checked={selectedDays.includes(day)}
+                onChange={() => handleDayChange(day)}
+              />
+              {day}
+            </label>
+          </div>
+        ))}
+      </div>
+
+      <p>
+        <strong>Selected Days:</strong>{" "}
+        {selectedDays.length ? selectedDays.join(", ") : "None"}
+      </p>
+    </div>
 </div>
 
       </div>
@@ -469,4 +776,5 @@ const handleUpdate = () => {
     </div>
   );
 };
+
 export default CampiginMangement;
