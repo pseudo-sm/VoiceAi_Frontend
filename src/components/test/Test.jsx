@@ -8,7 +8,7 @@ const Test = () => {
     const [statusMessage, setStatusMessage] = useState('Disconnected');
     const [isRecording, setIsRecording] = useState(false);
     const [bargeInVisible, setBargeInVisible] = useState(false);
-    const [ttsProvider, setTtsProvider] = useState('openai');
+    const [ttsProvider, setTtsProvider] = useState('azure');
     const [flowType, setFlowType] = useState('service_booking');
     const [assistantForm, setAssistantForm] = useState({
         insuranceCustomerName: '',
@@ -27,7 +27,7 @@ const Test = () => {
         callPurpose: 'service_confirmation',
         vehicleName: 'Tata Nexon',
         vehicleNumber: '',
-        ttsProvider: 'openai',
+        ttsProvider: 'azure',
         flowType: 'service_booking_outbound',
         additionalContext: '',
         insurancePolicyExpiry: '',
@@ -47,7 +47,7 @@ const Test = () => {
         vehicleName: '',
         callPurpose: 'test_drive',
         additionalContext: '',
-        ttsProvider: 'openai',
+        ttsProvider: 'azure',
         flowType: 'service_booking',
         insuranceVehicleNumber: '',
         insurancePolicyExpiry: '',
@@ -81,10 +81,11 @@ const Test = () => {
     const localWorkletNodeRef = useRef(null);
 
     const SAMPLE_RATE = 24000;
-    const WS_URL = import.meta.env.VITE_WS_URL
-        || 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone';
-    const OUTBOUND_WS_URL = import.meta.env.VITE_OUTBOUND_WS_URL
-        || 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone-outbound';
+    const NARRATIVE_ID = import.meta.env.VITE_NARRATIVE_ID
+        ? Number(import.meta.env.VITE_NARRATIVE_ID)
+        : 2;
+    const WS_URL = 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone';
+    const OUTBOUND_WS_URL = 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone-outbound';
     const serviceOutboundPurposes = ['service_confirmation', 'service_complete', 'service_reminder', 'service_followup'];
 
     // --- Utility Functions ---
@@ -117,6 +118,9 @@ const Test = () => {
             tts_provider: provider,
             flow_type: selectedFlowType
         });
+        if (Number.isFinite(NARRATIVE_ID)) {
+            params.set('narrative_id', String(NARRATIVE_ID));
+        }
         return `${baseUrl}?${params.toString()}`;
     };
 
@@ -334,6 +338,12 @@ const Test = () => {
         if (!isPlayingRef.current) processAudioQueue();
     };
 
+    const playPcm16Buffer = async (buffer) => {
+        if (!buffer) return;
+        const base64Audio = arrayBufferToBase64(buffer);
+        await playAudio(base64Audio);
+    };
+
     const processAudioQueue = async () => {
         if (audioQueueRef.current.length === 0) {
             isPlayingRef.current = false;
@@ -405,10 +415,33 @@ const Test = () => {
             // Wait for ready
         };
 
+        wsRef.current.binaryType = 'arraybuffer';
+
         wsRef.current.onmessage = async (event) => {
+            if (event.data instanceof ArrayBuffer) {
+                await playPcm16Buffer(event.data);
+                return;
+            }
+
+            if (event.data instanceof Blob) {
+                try {
+                    const text = await event.data.text();
+                    const parsed = JSON.parse(text);
+                    event.data = parsed;
+                } catch (error) {
+                    try {
+                        const buffer = await event.data.arrayBuffer();
+                        await playPcm16Buffer(buffer);
+                    } catch (err) {
+                        console.error('Failed to handle Blob message:', err);
+                    }
+                    return;
+                }
+            }
+
             let data;
             try {
-                data = JSON.parse(event.data);
+                data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
             } catch (error) {
                 console.error('Failed to parse WebSocket message:', error);
                 return;
@@ -489,7 +522,13 @@ const Test = () => {
                     break;
                 }
                 case 'audio':
-                    await playAudio(data.audio);
+                    if (data.audio) {
+                        await playAudio(data.audio);
+                    } else if (data.buffer) {
+                        await playPcm16Buffer(data.buffer);
+                    } else {
+                        console.warn('Audio event received without audio payload');
+                    }
                     break;
                 case 'clear_audio':
                     clearAllAudio();
@@ -578,6 +617,10 @@ const Test = () => {
             tts_provider: callForm.ttsProvider,
             flow_type: callForm.flowType
         };
+
+        if (Number.isFinite(NARRATIVE_ID)) {
+            payload.narrative_id = NARRATIVE_ID;
+        }
 
         if (callForm.additionalContext.trim()) {
             payload.additional_context = callForm.additionalContext.trim();
@@ -779,8 +822,31 @@ const Test = () => {
 
         localWsRef.current.onopen = () => { };
 
+        localWsRef.current.binaryType = 'arraybuffer';
+
         localWsRef.current.onmessage = async (event) => {
-            const data = JSON.parse(event.data);
+            if (event.data instanceof ArrayBuffer) {
+                await playPcm16Buffer(event.data);
+                return;
+            }
+
+            if (event.data instanceof Blob) {
+                try {
+                    const text = await event.data.text();
+                    const parsed = JSON.parse(text);
+                    event.data = parsed;
+                } catch (error) {
+                    try {
+                        const buffer = await event.data.arrayBuffer();
+                        await playPcm16Buffer(buffer);
+                    } catch (err) {
+                        console.error('Failed to handle Blob message:', err);
+                    }
+                    return;
+                }
+            }
+
+            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
             switch (data.event) {
                 case 'ready': {
                     updateLocalStatus('Connected - Starting session...', 'connecting');
@@ -824,7 +890,13 @@ const Test = () => {
                     setIsLocalRecording(true);
                     break;
                 case 'audio':
-                    await playLocalAudio(data.audio);
+                    if (data.audio) {
+                        await playLocalAudio(data.audio);
+                    } else if (data.buffer) {
+                        await playPcm16Buffer(data.buffer);
+                    } else {
+                        console.warn('Local audio event received without audio payload');
+                    }
                     break;
                 case 'clear_audio':
                     clearLocalAudio();
@@ -965,6 +1037,7 @@ const Test = () => {
                                 onChange={(e) => setTtsProvider(e.target.value)}
                             >
                                 <option value="openai">OpenAI TTS</option>
+                                <option value="azure">Azure TTS</option>
                                 <option value="elevenlabs">ElevenLabs TTS</option>
                             </select>
                             <select
@@ -1135,6 +1208,7 @@ const Test = () => {
                                 onChange={(e) => setCallForm({ ...callForm, ttsProvider: e.target.value })}
                             >
                                 <option value="openai">OpenAI TTS</option>
+                                <option value="azure">Azure TTS</option>
                                 <option value="elevenlabs">ElevenLabs TTS</option>
                             </select>
                             <select
@@ -1250,6 +1324,7 @@ const Test = () => {
                         onChange={(e) => setLocalForm({ ...localForm, ttsProvider: e.target.value })}
                     >
                         <option value="openai">OpenAI TTS</option>
+                        <option value="azure">Azure TTS</option>
                         <option value="elevenlabs">ElevenLabs TTS</option>
                     </select>
                     <select
