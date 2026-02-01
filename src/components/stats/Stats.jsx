@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import {
-    Phone, PhoneIncoming, PhoneMissed, Clock,
-    ArrowUpRight, ArrowDownRight, Calendar
+    Phone, PhoneIncoming, Clock, Megaphone,
+    ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import statsData from '../../data/statsData.json';
 import './Stats.css';
 
 const Stats = () => {
     const [globalFilter, setGlobalFilter] = useState('daily');
-    const [graphFilter, setGraphFilter] = useState('1W');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [stats, setStats] = useState(statsData);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadError, setLoadError] = useState(null);
 
-    const { summary, callTrends, appointments, appointmentTable } = statsData;
+    const { summary, statusBreakdown, campaignProgress, appointmentTable } = stats;
     const currentSummary = summary[globalFilter] || summary.daily;
 
     // Filter table data based on selected date
@@ -39,11 +41,43 @@ const Stats = () => {
         </div>
     );
 
+    useEffect(() => {
+        const fetchStats = async () => {
+            const endpoint = import.meta.env.VITE_STATS_API_URL;
+            if (!endpoint) {
+                setStats(statsData);
+                return;
+            }
+
+            setIsLoading(true);
+            setLoadError(null);
+
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) {
+                    throw new Error(`Request failed with ${response.status}`);
+                }
+                const data = await response.json();
+                setStats(data);
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                setLoadError('Failed to load latest stats. Showing cached data.');
+                setStats(statsData);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
     return (
         <div className="stats-container">
             {/* Header */}
             <div className="stats-header">
                 <h2 className="stats-title">Analytics Overview</h2>
+                {loadError && <div className="stats-error">{loadError}</div>}
+                {!loadError && isLoading && <div className="stats-loading">Loading...</div>}
                 <div className="filter-segmented-control">
                     <button
                         className={`filter-btn ${globalFilter === 'daily' ? 'active' : ''}`}
@@ -85,96 +119,76 @@ const Stats = () => {
                     color="#10b981"
                 />
                 <StatCard
-                    label="Rejected"
-                    value={currentSummary.rejected.value}
-                    trend={currentSummary.rejected.trend}
-                    isIncrease={currentSummary.rejected.isIncrease}
-                    icon={PhoneMissed}
-                    color="#ef4444"
+                    label="Total Campaigns"
+                    value={currentSummary.totalCampaigns.value}
+                    trend={currentSummary.totalCampaigns.trend}
+                    isIncrease={currentSummary.totalCampaigns.isIncrease}
+                    icon={Megaphone}
+                    color="#8b5cf6"
                 />
                 <StatCard
-                    label="Total Duration"
-                    value={currentSummary.duration.value}
-                    trend={currentSummary.duration.trend}
-                    isIncrease={currentSummary.duration.isIncrease}
+                    label="Avg Call Duration"
+                    value={currentSummary.avgCallDuration.value}
+                    trend={currentSummary.avgCallDuration.trend}
+                    isIncrease={currentSummary.avgCallDuration.isIncrease}
                     icon={Clock}
                     color="#f59e0b"
                 />
+                <StatCard
+                    label="Total Call Minutes"
+                    value={currentSummary.totalCallMinutes.value}
+                    trend={currentSummary.totalCallMinutes.trend}
+                    isIncrease={currentSummary.totalCallMinutes.isIncrease}
+                    icon={Clock}
+                    color="#0ea5e9"
+                />
             </div>
 
-            {/* Charts & Appointments Row */}
+            {/* Charts Row */}
             <div className="charts-row">
-                {/* Call Volume Graph */}
+                {/* Status vs Call Count */}
                 <div className="chart-card">
                     <div className="chart-header">
-                        <h3 className="chart-title">Call Volume Trends</h3>
-                        <div className="chart-filters">
-                            {['1W', '2W', '1M', '6M'].map(filter => (
-                                <button
-                                    key={filter}
-                                    className={`chart-filter-btn ${graphFilter === filter ? 'active' : ''}`}
-                                    onClick={() => setGraphFilter(filter)}
-                                >
-                                    {filter}
-                                </button>
-                            ))}
-                        </div>
+                        <h3 className="chart-title">Status vs Call Count</h3>
                     </div>
                     <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={callTrends[graphFilter]}>
-                            <defs>
-                                <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
+                        <BarChart data={statusBreakdown}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                            <XAxis dataKey="status" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                             <Tooltip
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
                             />
-                            <Area
-                                type="monotone"
-                                dataKey="calls"
-                                stroke="#3b82f6"
-                                strokeWidth={3}
-                                fillOpacity={1}
-                                fill="url(#colorCalls)"
-                            />
-                        </AreaChart>
+                            <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                        </BarChart>
                     </ResponsiveContainer>
                 </div>
 
-                {/* Appointments & Reminders */}
-                <div className="appointments-col">
-                    <h3 className="chart-title"> Appointments & Reminders</h3>
-                    <div className="appt-card">
-
-                        <div className="appt-title">Appointments Booked</div>
-                        <div className="stat-header" >
-                            <div className="stat-icon-wrapper" style={{ backgroundColor: '#8b5cf620', color: '#8b5cf6' }}>
-                                <Calendar size={20} />
-                            </div>
-                            <div className="appt-value">{appointments.booked.value}</div>
-                        </div>
-                        <div className="appt-trend">
-                            <span className="trend-text-up">+{appointments.booked.trend}%</span> compared to last month
-                        </div>
+                {/* Campaign Progress Report */}
+                <div className="chart-card">
+                    <div className="chart-header">
+                        <h3 className="chart-title">Campaigns Progress Report</h3>
                     </div>
-                    <div className="appt-card">
-
-                        <div className="appt-title">Reminder Calls</div>
-                        <div className="stat-header" >
-                            <div className="stat-icon-wrapper" style={{ backgroundColor: '#ec489920', color: '#ec4899' }}>
-                                <Clock size={20} />
-                            </div>
-                            <div className="appt-value">{appointments.reminders.value}</div>
-                        </div>
-                        <div className="appt-trend">
-                            <span className="trend-text-up">+{appointments.reminders.trend}%</span> compared to last month
-                        </div>
-                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={campaignProgress} layout="vertical" barSize={16}>
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                            <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                            <YAxis
+                                type="category"
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                width={140}
+                                tick={{ fill: '#64748b', fontSize: 12 }}
+                            />
+                            <Tooltip
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                            />
+                            <Legend />
+                            <Bar dataKey="completed" stackId="a" fill="#10b981" radius={[0, 8, 8, 0]} />
+                            <Bar dataKey="pending" stackId="a" fill="#f59e0b" radius={[0, 8, 8, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
