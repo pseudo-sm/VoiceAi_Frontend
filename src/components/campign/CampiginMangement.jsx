@@ -325,15 +325,43 @@ const handleChange = (e) => {
 };
 
 
-const handleUpdate = () => {
-  setCampaigns((prev) =>
-    prev.map((item) =>
-      item.id === selectedCampaignId ? { ...campaign } : item
-    )
-  );
+const handleUpdate = async () => {
+  if (!selectedCampaignId) return;
 
-  setEditMModelOpen(false);
-  setSelectedCampaignId(null);
+  const formData = new FormData();
+  formData.append("campaign_status", campaign.statusFromApi || "active");
+  formData.append("campaign_name", campaign.name || "");
+  formData.append("description", campaign.description || "");
+  formData.append("narrative_id", campaign.narrative || "");
+  formData.append("start_date", campaign.startDate || "");
+  formData.append("start_time", campaign.startTime || "");
+  formData.append("end_date", campaign.endDate || "");
+  formData.append("end_time", campaign.endTime || "");
+  formData.append("enterprise_id", campaign.enterpriseId || 1);
+  formData.append("updated_by", 1);
+
+  formData.append("is_monday", Boolean(campaign.days?.monday));
+  formData.append("is_tuesday", Boolean(campaign.days?.tuesday));
+  formData.append("is_wednesday", Boolean(campaign.days?.wednesday));
+  formData.append("is_thursday", Boolean(campaign.days?.thursday));
+  formData.append("is_friday", Boolean(campaign.days?.friday));
+  formData.append("is_saturday", Boolean(campaign.days?.saturday));
+  formData.append("is_sunday", Boolean(campaign.days?.sunday));
+
+  if (fileInputRef.current && fileInputRef.current.files[0]) {
+    formData.append("file", fileInputRef.current.files[0]);
+  }
+
+  try {
+    await updateCampaign(selectedCampaignId, formData);
+    toast.success("Campaign updated");
+    await fetchCampaigns();
+    setEditMModelOpen(false);
+    setSelectedCampaignId(null);
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    toast.error("Failed to update campaign");
+  }
 };
 
 const handleToggleStatus = async (item) => {
@@ -734,27 +762,7 @@ const handleToggleStatus = async (item) => {
             onChange={handleChange}
           />
         </div>
-  <div className="form-group  new-stl">
-       <label>  </label>
-       {/* <input type="file" name="file"  /> */}
-        <>
-      <button
-        className="action-button upload-button"
-        style={{ height: "37px", width: "200px", alignItems: "center", justifyContent: "center" }}
-        onClick={handleButtonClick}
-      >
-        <Upload /> Upload file
-      </button>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
-    </>
-       {/* <button className="action-button upload-button" style={{height:"37px",width:"200px",alignItems:"center",justifyContent:"center"}}  > <Upload/>Upload file</button> */}
-      </div>
         <div className="form-group">
           <label>Campaign Description</label>
           <textarea
