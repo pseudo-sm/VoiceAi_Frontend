@@ -11,13 +11,13 @@ const Sidebar = () => {
                 <span className="logo-text">Voice AI</span>
             </div>
             <nav className="sidebar-nav">
-                <NavLink
+                {/* <NavLink
                     to="/dashboard"
                     className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 >
                     <LayoutDashboard className="nav-icon" />
                     <span>Dashboard</span>
-                </NavLink>
+                </NavLink> */}
                 <NavLink
                     to="/stats"
                     className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -31,6 +31,13 @@ const Sidebar = () => {
                 >
                     <FlaskConical className="nav-icon" />
                     <span>Test</span>
+                </NavLink>
+                <NavLink
+                    to="/campign"
+                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                    <FlaskConical className="nav-icon" />
+                    <span>Manage Campaign</span>
                 </NavLink>
             </nav>
         </div>

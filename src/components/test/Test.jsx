@@ -8,6 +8,17 @@ const Test = () => {
     const [statusMessage, setStatusMessage] = useState('Disconnected');
     const [isRecording, setIsRecording] = useState(false);
     const [bargeInVisible, setBargeInVisible] = useState(false);
+    const [ttsProvider, setTtsProvider] = useState('openai');
+    const [flowType, setFlowType] = useState('service_booking');
+    const [assistantForm, setAssistantForm] = useState({
+        insuranceCustomerName: '',
+        insuranceVehicleNumber: '',
+        insurancePolicyExpiry: '',
+        insuranceCustomerPhone: '',
+        serviceBookingCustomerName: '',
+        serviceBookingVehicleNumber: '',
+        serviceBookingLastServiceDate: ''
+    });
 
     // --- Outbound Call State ---
     const [callForm, setCallForm] = useState({
@@ -15,7 +26,14 @@ const Test = () => {
         customerName: 'Piyush',
         callPurpose: 'service_confirmation',
         vehicleName: 'Tata Nexon',
-        vehicleNumber: ''
+        vehicleNumber: '',
+        ttsProvider: 'openai',
+        flowType: 'service_booking_outbound',
+        additionalContext: '',
+        insurancePolicyExpiry: '',
+        insuranceVehicleNumber: '',
+        serviceBookingVehicleNumber: '',
+        serviceBookingLastServiceDate: ''
     });
     const [callStatus, setCallStatus] = useState(null);
     const [isCalling, setIsCalling] = useState(false);
@@ -28,7 +46,14 @@ const Test = () => {
         customerName: '',
         vehicleName: '',
         callPurpose: 'test_drive',
-        additionalContext: ''
+        additionalContext: '',
+        ttsProvider: 'openai',
+        flowType: 'service_booking',
+        insuranceVehicleNumber: '',
+        insurancePolicyExpiry: '',
+        insuranceCustomerPhone: '',
+        serviceBookingVehicleNumber: '',
+        serviceBookingLastServiceDate: ''
     });
 
     // --- Refs for Main Assistant ---
@@ -41,6 +66,7 @@ const Test = () => {
     const analyserRef = useRef(null);
     const canvasRef = useRef(null);
     const animationFrameRef = useRef(null);
+    const workletNodeRef = useRef(null);
 
     // --- Refs for Local Test ---
     const localWsRef = useRef(null);
@@ -52,10 +78,14 @@ const Test = () => {
     const localAnalyserRef = useRef(null);
     const localCanvasRef = useRef(null);
     const localAnimationFrameRef = useRef(null);
+    const localWorkletNodeRef = useRef(null);
 
     const SAMPLE_RATE = 24000;
-    const WS_URL = 'ws://localhost:8000/microphone';
-    const OUTBOUND_WS_URL = 'ws://localhost:8000/microphone-outbound';
+    const WS_URL = import.meta.env.VITE_WS_URL
+        || 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone';
+    const OUTBOUND_WS_URL = import.meta.env.VITE_OUTBOUND_WS_URL
+        || 'wss://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/microphone-outbound';
+    const serviceOutboundPurposes = ['service_confirmation', 'service_complete', 'service_reminder', 'service_followup'];
 
     // --- Utility Functions ---
     const arrayBufferToBase64 = (buffer) => {
@@ -74,6 +104,120 @@ const Test = () => {
             bytes[i] = binaryString.charCodeAt(i);
         }
         return bytes.buffer;
+    };
+
+    const getDefaultExpiryDate = () => {
+        const defaultExpiry = new Date();
+        defaultExpiry.setDate(defaultExpiry.getDate() + 30);
+        return defaultExpiry.toISOString().split('T')[0];
+    };
+
+    const buildWsUrl = (baseUrl, provider, selectedFlowType) => {
+        const params = new URLSearchParams({
+            tts_provider: provider,
+            flow_type: selectedFlowType
+        });
+        return `${baseUrl}?${params.toString()}`;
+    };
+
+    const handleCallPurposeChange = (value) => {
+        setCallForm((prev) => {
+            let nextFlowType = prev.flowType;
+            let insurancePolicyExpiry = prev.insurancePolicyExpiry;
+
+            if (value === 'insurance_renewal') {
+                nextFlowType = 'insurance_renewal';
+                insurancePolicyExpiry = insurancePolicyExpiry || getDefaultExpiryDate();
+            } else if (serviceOutboundPurposes.includes(value)) {
+                nextFlowType = 'service_booking_outbound';
+            } else {
+                nextFlowType = 'service_booking';
+            }
+
+            return {
+                ...prev,
+                callPurpose: value,
+                flowType: nextFlowType,
+                insurancePolicyExpiry
+            };
+        });
+    };
+
+    const handleCallFlowTypeChange = (value) => {
+        setCallForm((prev) => {
+            let nextCallPurpose = prev.callPurpose;
+            let insurancePolicyExpiry = prev.insurancePolicyExpiry;
+
+            if (value === 'insurance_renewal') {
+                nextCallPurpose = 'insurance_renewal';
+                insurancePolicyExpiry = insurancePolicyExpiry || getDefaultExpiryDate();
+            } else if (value === 'service_booking_outbound') {
+                if (!serviceOutboundPurposes.includes(prev.callPurpose)) {
+                    nextCallPurpose = 'service_reminder';
+                }
+            } else {
+                if (prev.callPurpose === 'insurance_renewal') {
+                    nextCallPurpose = 'test_drive';
+                }
+            }
+
+            return {
+                ...prev,
+                flowType: value,
+                callPurpose: nextCallPurpose,
+                insurancePolicyExpiry
+            };
+        });
+    };
+
+    const handleLocalCallPurposeChange = (value) => {
+        setLocalForm((prev) => {
+            let nextFlowType = prev.flowType;
+            let insurancePolicyExpiry = prev.insurancePolicyExpiry;
+
+            if (value === 'insurance_renewal') {
+                nextFlowType = 'insurance_renewal';
+                insurancePolicyExpiry = insurancePolicyExpiry || getDefaultExpiryDate();
+            } else if (serviceOutboundPurposes.includes(value)) {
+                nextFlowType = 'service_booking_outbound';
+            } else {
+                nextFlowType = 'service_booking';
+            }
+
+            return {
+                ...prev,
+                callPurpose: value,
+                flowType: nextFlowType,
+                insurancePolicyExpiry
+            };
+        });
+    };
+
+    const handleLocalFlowTypeChange = (value) => {
+        setLocalForm((prev) => {
+            let nextCallPurpose = prev.callPurpose;
+            let insurancePolicyExpiry = prev.insurancePolicyExpiry;
+
+            if (value === 'insurance_renewal') {
+                nextCallPurpose = 'insurance_renewal';
+                insurancePolicyExpiry = insurancePolicyExpiry || getDefaultExpiryDate();
+            } else if (value === 'service_booking_outbound') {
+                if (!serviceOutboundPurposes.includes(prev.callPurpose)) {
+                    nextCallPurpose = 'service_reminder';
+                }
+            } else {
+                if (prev.callPurpose === 'insurance_renewal') {
+                    nextCallPurpose = 'test_drive';
+                }
+            }
+
+            return {
+                ...prev,
+                flowType: value,
+                callPurpose: nextCallPurpose,
+                insurancePolicyExpiry
+            };
+        });
     };
 
     // --- Main Assistant Logic ---
@@ -130,6 +274,12 @@ const Test = () => {
 
             const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
             audioContextRef.current = audioContext;
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            audioContext.onstatechange = () => {
+                console.log('AudioContext state changed to:', audioContext.state);
+            };
 
             analyserRef.current = audioContext.createAnalyser();
             analyserRef.current.fftSize = 256;
@@ -144,27 +294,25 @@ const Test = () => {
                 drawVisualizer();
             }
 
-            const processor = audioContext.createScriptProcessor(4096, 1, 1);
-            processor.onaudioprocess = (e) => {
-                if (!isRecording) return;
+            await audioContext.audioWorklet.addModule(
+                new URL('../../worklets/pcm16-processor.js', import.meta.url)
+            );
 
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcm16 = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                    const s = Math.max(-1, Math.min(1, inputData[i]));
-                    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                }
+            const workletNode = new AudioWorkletNode(audioContext, 'pcm16-processor');
+            workletNodeRef.current = workletNode;
+            workletNode.port.onmessage = (event) => {
+                if (event?.data?.type !== 'pcm16') return;
+                if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
-                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                    wsRef.current.send(JSON.stringify({
-                        event: 'audio',
-                        audio: arrayBufferToBase64(pcm16.buffer)
-                    }));
-                }
+                const base64Audio = arrayBufferToBase64(event.data.buffer);
+                wsRef.current.send(JSON.stringify({
+                    event: 'audio',
+                    audio: base64Audio
+                }));
             };
 
-            source.connect(processor);
-            processor.connect(audioContext.destination);
+            source.connect(workletNode);
+            workletNode.connect(audioContext.destination);
             return true;
         } catch (error) {
             console.error('Audio setup error:', error);
@@ -175,6 +323,13 @@ const Test = () => {
 
     const playAudio = async (audioData) => {
         if (!audioContextRef.current) return;
+        if (audioContextRef.current.state === 'suspended') {
+            try {
+                await audioContextRef.current.resume();
+            } catch (error) {
+                console.error('Failed to resume AudioContext:', error);
+            }
+        }
         audioQueueRef.current.push(audioData);
         if (!isPlayingRef.current) processAudioQueue();
     };
@@ -241,34 +396,117 @@ const Test = () => {
 
     const startSession = async () => {
         updateStatus('Connecting...', 'disconnected');
-        wsRef.current = new WebSocket(WS_URL);
+        const baseWsUrl = (flowType === 'insurance_renewal' || flowType === 'service_booking_outbound')
+            ? OUTBOUND_WS_URL
+            : WS_URL;
+        wsRef.current = new WebSocket(buildWsUrl(baseWsUrl, ttsProvider, flowType));
 
         wsRef.current.onopen = () => {
             // Wait for ready
         };
 
         wsRef.current.onmessage = async (event) => {
-            const data = JSON.parse(event.data);
+            let data;
+            try {
+                data = JSON.parse(event.data);
+            } catch (error) {
+                console.error('Failed to parse WebSocket message:', error);
+                return;
+            }
+
             switch (data.event) {
-                case 'ready':
+                case 'ready': {
                     updateStatus('Ready - Click Start to begin', 'connected');
                     const audioReady = await setupAudioCapture();
-                    if (audioReady) {
-                        wsRef.current.send(JSON.stringify({ event: 'start' }));
-                    } else {
+                    if (!audioReady) {
                         wsRef.current.close();
+                        return;
                     }
+
+                    let startMessage = { event: 'start' };
+                    if (flowType === 'insurance_renewal') {
+                        const customerName = assistantForm.insuranceCustomerName.trim();
+                        const vehicleNumber = assistantForm.insuranceVehicleNumber.trim();
+                        const policyExpiry = assistantForm.insurancePolicyExpiry;
+                        const customerPhone = assistantForm.insuranceCustomerPhone.trim();
+
+                        if (!customerName) {
+                            updateStatus('Please enter customer name for insurance renewal', 'disconnected');
+                            wsRef.current.close();
+                            return;
+                        }
+
+                        startMessage = {
+                            event: 'start',
+                            context: {
+                                customer_name: customerName,
+                                vehicle_number: vehicleNumber || 'MH12AB1234',
+                                policy_expiry_date: policyExpiry || getDefaultExpiryDate(),
+                                customer_phone: customerPhone || '9876543210',
+                                call_purpose: 'insurance_renewal',
+                                additional_context: `Motor insurance policy renewal call for ${vehicleNumber || 'vehicle'}`
+                            }
+                        };
+                    } else if (flowType === 'service_booking_outbound') {
+                        const customerName = assistantForm.serviceBookingCustomerName.trim();
+                        const vehicleNumber = assistantForm.serviceBookingVehicleNumber.trim();
+                        const lastServiceDate = assistantForm.serviceBookingLastServiceDate;
+
+                        if (!customerName) {
+                            updateStatus('Please enter customer name for service booking outbound', 'disconnected');
+                            wsRef.current.close();
+                            return;
+                        }
+
+                        if (!vehicleNumber) {
+                            updateStatus('Please enter vehicle number for service booking outbound', 'disconnected');
+                            wsRef.current.close();
+                            return;
+                        }
+
+                        startMessage = {
+                            event: 'start',
+                            context: {
+                                customer_name: customerName,
+                                vehicle_number: vehicleNumber,
+                                last_service_date: lastServiceDate || null,
+                                call_purpose: 'service_reminder',
+                                additional_context: `Service booking outbound call for vehicle ${vehicleNumber}`
+                            }
+                        };
+                    }
+
+                    wsRef.current.send(JSON.stringify(startMessage));
                     break;
-                case 'started':
-                    updateStatus('Session started - Speak now', 'speaking');
+                }
+                case 'started': {
+                    if (flowType === 'insurance_renewal' || flowType === 'service_booking_outbound') {
+                        updateStatus('📞 Outbound call in progress - AI will greet the customer', 'speaking');
+                    } else {
+                        updateStatus('Session started - Speak now', 'speaking');
+                    }
                     setIsRecording(true);
                     break;
+                }
                 case 'audio':
                     await playAudio(data.audio);
                     break;
                 case 'clear_audio':
                     clearAllAudio();
                     break;
+                case 'call_ending': {
+                    const reasonLabels = {
+                        customer_busy: '📵 Customer Busy',
+                        customer_frustrated: '😤 Customer Frustrated',
+                        customer_declined: '❌ Customer Declined',
+                        renewal_complete: '✅ Renewal Complete',
+                        booking_complete: '✅ Booking Complete',
+                        conversation_ended: '👋 Conversation Ended',
+                        customer_request: '🛑 Customer Request'
+                    };
+                    updateStatus(`Call ending: ${reasonLabels[data.reason] || data.reason}${data.summary ? ' - ' + data.summary : ''}`, 'disconnected');
+                    break;
+                }
                 case 'stopped':
                     updateStatus('Session stopped', 'disconnected');
                     setIsRecording(false);
@@ -305,6 +543,10 @@ const Test = () => {
             audioContextRef.current.close();
             audioContextRef.current = null;
         }
+        if (workletNodeRef.current) {
+            workletNodeRef.current.disconnect();
+            workletNodeRef.current = null;
+        }
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
         }
@@ -319,25 +561,60 @@ const Test = () => {
             return;
         }
 
+        if (!callForm.customerName.trim()) {
+            setCallStatus({ message: 'Please enter customer name', type: 'error' });
+            return;
+        }
+
         setIsCalling(true);
         setCallStatus({ message: 'Initiating call...', type: 'loading' });
 
         const payload = {
             customer_phone: callForm.phoneNumber,
-            customer_name: callForm.customerName,
+            customer_name: callForm.customerName.trim(),
             call_purpose: callForm.callPurpose,
-            vehicle_name: callForm.vehicleName,
-            vehicle_number: callForm.vehicleNumber
+            vehicle_name: callForm.vehicleName.trim(),
+            vehicle_number: callForm.vehicleNumber.trim(),
+            tts_provider: callForm.ttsProvider,
+            flow_type: callForm.flowType
         };
+
+        if (callForm.additionalContext.trim()) {
+            payload.additional_context = callForm.additionalContext.trim();
+        }
+
+        if (callForm.callPurpose === 'insurance_renewal') {
+            if (callForm.insuranceVehicleNumber.trim()) {
+                payload.vehicle_number = callForm.insuranceVehicleNumber.trim();
+            }
+            if (callForm.insurancePolicyExpiry) {
+                payload.policy_expiry_date = callForm.insurancePolicyExpiry;
+            }
+        }
+
+        if (callForm.flowType === 'service_booking_outbound') {
+            if (callForm.serviceBookingVehicleNumber.trim()) {
+                payload.vehicle_number = callForm.serviceBookingVehicleNumber.trim();
+            }
+            if (callForm.serviceBookingLastServiceDate) {
+                payload.last_service_date = callForm.serviceBookingLastServiceDate;
+            }
+        }
 
         const result = await initiateOutboundCall(payload);
 
         if (result.success) {
-            setCallStatus({ message: `Call initiated! SID: ${result.data.call_sid || 'N/A'}`, type: 'success' });
-            setCallForm({ ...callForm, phoneNumber: '', customerName: '', vehicleName: '', vehicleNumber: '' });
+            setCallStatus({ message: `✅ Call initiated successfully! SID: ${result.data.call_sid || 'N/A'}`, type: 'success' });
+            setCallForm((prev) => ({
+                ...prev,
+                phoneNumber: '',
+                customerName: '',
+                vehicleName: '',
+                vehicleNumber: ''
+            }));
             setTimeout(() => setCallStatus(null), 5000);
         } else {
-            setCallStatus({ message: `Failed: ${result.error || 'Unknown error'}`, type: 'error' });
+            setCallStatus({ message: `Failed: ${result.error || result.data?.message || 'Unknown error'}`, type: 'error' });
         }
         setIsCalling(false);
     };
@@ -388,6 +665,12 @@ const Test = () => {
 
             const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
             localAudioContextRef.current = audioContext;
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            audioContext.onstatechange = () => {
+                console.log('[Local] AudioContext state changed to:', audioContext.state);
+            };
 
             localAnalyserRef.current = audioContext.createAnalyser();
             localAnalyserRef.current.fftSize = 256;
@@ -401,22 +684,24 @@ const Test = () => {
                 drawLocalVisualizer();
             }
 
-            const processor = audioContext.createScriptProcessor(4096, 1, 1);
-            processor.onaudioprocess = (e) => {
-                if (!isLocalRecording) return;
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcm16 = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                    const s = Math.max(-1, Math.min(1, inputData[i]));
-                    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                }
-                if (localWsRef.current && localWsRef.current.readyState === WebSocket.OPEN) {
-                    localWsRef.current.send(JSON.stringify({ event: 'audio', audio: arrayBufferToBase64(pcm16.buffer) }));
-                }
+            await audioContext.audioWorklet.addModule(
+                new URL('../../worklets/pcm16-processor.js', import.meta.url)
+            );
+
+            const workletNode = new AudioWorkletNode(audioContext, 'pcm16-processor');
+            localWorkletNodeRef.current = workletNode;
+            workletNode.port.onmessage = (event) => {
+                if (event?.data?.type !== 'pcm16') return;
+                if (!localWsRef.current || localWsRef.current.readyState !== WebSocket.OPEN) return;
+
+                localWsRef.current.send(JSON.stringify({
+                    event: 'audio',
+                    audio: arrayBufferToBase64(event.data.buffer)
+                }));
             };
 
-            source.connect(processor);
-            processor.connect(audioContext.destination);
+            source.connect(workletNode);
+            workletNode.connect(audioContext.destination);
             return true;
         } catch (error) {
             updateLocalStatus('Microphone access denied', 'error');
@@ -426,6 +711,13 @@ const Test = () => {
 
     const playLocalAudio = async (audioData) => {
         if (!localAudioContextRef.current) return;
+        if (localAudioContextRef.current.state === 'suspended') {
+            try {
+                await localAudioContextRef.current.resume();
+            } catch (error) {
+                console.error('Failed to resume local AudioContext:', error);
+            }
+        }
         localAudioQueueRef.current.push(audioData);
         if (!localIsPlayingRef.current) processLocalAudioQueue();
     };
@@ -483,30 +775,50 @@ const Test = () => {
             return;
         }
         updateLocalStatus('Connecting...', 'connecting');
-        localWsRef.current = new WebSocket(OUTBOUND_WS_URL);
+        localWsRef.current = new WebSocket(buildWsUrl(OUTBOUND_WS_URL, localForm.ttsProvider, localForm.flowType));
 
         localWsRef.current.onopen = () => { };
 
         localWsRef.current.onmessage = async (event) => {
             const data = JSON.parse(event.data);
             switch (data.event) {
-                case 'ready':
+                case 'ready': {
                     updateLocalStatus('Connected - Starting session...', 'connecting');
                     const audioReady = await setupLocalAudioCapture();
-                    if (audioReady) {
-                        localWsRef.current.send(JSON.stringify({
-                            event: 'start',
-                            context: {
-                                customer_name: localForm.customerName,
-                                vehicle_name: localForm.vehicleName,
-                                call_purpose: localForm.callPurpose,
-                                additional_context: localForm.additionalContext
-                            }
-                        }));
-                    } else {
+                    if (!audioReady) {
                         localWsRef.current.close();
+                        return;
                     }
+
+                    const context = {
+                        customer_name: localForm.customerName.trim(),
+                        vehicle_name: localForm.vehicleName.trim(),
+                        call_purpose: localForm.callPurpose,
+                        additional_context: localForm.additionalContext.trim()
+                    };
+
+                    if (localForm.callPurpose === 'insurance_renewal') {
+                        if (localForm.insuranceVehicleNumber.trim()) {
+                            context.vehicle_number = localForm.insuranceVehicleNumber.trim();
+                        }
+                        if (localForm.insurancePolicyExpiry) {
+                            context.policy_expiry_date = localForm.insurancePolicyExpiry;
+                        }
+                        if (localForm.insuranceCustomerPhone.trim()) {
+                            context.customer_phone = localForm.insuranceCustomerPhone.trim();
+                        }
+                    } else if (localForm.flowType === 'service_booking_outbound') {
+                        if (localForm.serviceBookingVehicleNumber.trim()) {
+                            context.vehicle_number = localForm.serviceBookingVehicleNumber.trim();
+                        }
+                        if (localForm.serviceBookingLastServiceDate) {
+                            context.last_service_date = localForm.serviceBookingLastServiceDate;
+                        }
+                    }
+
+                    localWsRef.current.send(JSON.stringify({ event: 'start', context }));
                     break;
+                }
                 case 'started':
                     updateLocalStatus('📞 Call in progress - AI will greet the customer', 'connected');
                     setIsLocalRecording(true);
@@ -517,17 +829,19 @@ const Test = () => {
                 case 'clear_audio':
                     clearLocalAudio();
                     break;
-                case 'call_ending':
+                case 'call_ending': {
                     const reasonLabels = {
-                        'customer_busy': '📵 Customer Busy',
-                        'customer_frustrated': '😤 Customer Frustrated',
-                        'customer_declined': '❌ Customer Declined',
-                        'booking_complete': '✅ Booking Complete',
-                        'conversation_ended': '👋 Conversation Ended',
-                        'customer_request': '🛑 Customer Request'
+                        customer_busy: '📵 Customer Busy',
+                        customer_frustrated: '😤 Customer Frustrated',
+                        customer_declined: '❌ Customer Declined',
+                        booking_complete: '✅ Booking Complete',
+                        renewal_complete: '✅ Renewal Complete',
+                        conversation_ended: '👋 Conversation Ended',
+                        customer_request: '🛑 Customer Request'
                     };
                     updateLocalStatus(`Call ending: ${reasonLabels[data.reason] || data.reason}${data.summary ? ' - ' + data.summary : ''}`, 'idle');
                     break;
+                }
                 case 'stopped':
                     updateLocalStatus('Call ended', 'idle');
                     setIsLocalRecording(false);
@@ -564,6 +878,10 @@ const Test = () => {
             localAudioContextRef.current.close();
             localAudioContextRef.current = null;
         }
+        if (localWorkletNodeRef.current) {
+            localWorkletNodeRef.current.disconnect();
+            localWorkletNodeRef.current = null;
+        }
         if (localAnimationFrameRef.current) {
             cancelAnimationFrame(localAnimationFrameRef.current);
         }
@@ -572,7 +890,44 @@ const Test = () => {
     };
 
     useEffect(() => {
+        if (flowType === 'insurance_renewal' && !assistantForm.insurancePolicyExpiry) {
+            setAssistantForm((prev) => ({
+                ...prev,
+                insurancePolicyExpiry: getDefaultExpiryDate()
+            }));
+        }
+    }, [flowType, assistantForm.insurancePolicyExpiry]);
+
+    useEffect(() => {
+        if (workletNodeRef.current) {
+            workletNodeRef.current.port.postMessage({
+                type: 'recording',
+                value: isRecording
+            });
+        }
+    }, [isRecording]);
+
+    useEffect(() => {
+        if (localWorkletNodeRef.current) {
+            localWorkletNodeRef.current.port.postMessage({
+                type: 'recording',
+                value: isLocalRecording
+            });
+        }
+    }, [isLocalRecording]);
+
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            stopSession();
+            cleanup();
+            stopLocalTest();
+            cleanupLocal();
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
         return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
             if (isRecording) stopSession();
             if (isLocalRecording) stopLocalTest();
             cleanup();
@@ -602,6 +957,86 @@ const Test = () => {
                         <div className={`status-indicator status-${status}`}>
                             {statusMessage}
                         </div>
+
+                        <div className="options-grid">
+                            <select
+                                className="select-input"
+                                value={ttsProvider}
+                                onChange={(e) => setTtsProvider(e.target.value)}
+                            >
+                                <option value="openai">OpenAI TTS</option>
+                                <option value="elevenlabs">ElevenLabs TTS</option>
+                            </select>
+                            <select
+                                className="select-input"
+                                value={flowType}
+                                onChange={(e) => setFlowType(e.target.value)}
+                            >
+                                <option value="service_booking">Service Booking</option>
+                                <option value="insurance_renewal">Insurance Renewal</option>
+                                <option value="service_booking_outbound">Service Booking Outbound</option>
+                            </select>
+                        </div>
+
+                        {flowType === 'insurance_renewal' && (
+                            <div className="options-grid">
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Customer Name *"
+                                    value={assistantForm.insuranceCustomerName}
+                                    onChange={(e) => setAssistantForm({ ...assistantForm, insuranceCustomerName: e.target.value })}
+                                />
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Vehicle Number"
+                                    value={assistantForm.insuranceVehicleNumber}
+                                    onChange={(e) => setAssistantForm({ ...assistantForm, insuranceVehicleNumber: e.target.value })}
+                                />
+                                <input
+                                    type="date"
+                                    className="text-input"
+                                    value={assistantForm.insurancePolicyExpiry}
+                                    onChange={(e) => setAssistantForm({ ...assistantForm, insurancePolicyExpiry: e.target.value })}
+                                />
+                                <input
+                                    type="tel"
+                                    className="text-input"
+                                    placeholder="Customer Phone"
+                                    value={assistantForm.insuranceCustomerPhone}
+                                    onChange={(e) => setAssistantForm({
+                                        ...assistantForm,
+                                        insuranceCustomerPhone: e.target.value.replace(/\D/g, '').slice(0, 10)
+                                    })}
+                                />
+                            </div>
+                        )}
+
+                        {flowType === 'service_booking_outbound' && (
+                            <div className="options-grid">
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Customer Name *"
+                                    value={assistantForm.serviceBookingCustomerName}
+                                    onChange={(e) => setAssistantForm({ ...assistantForm, serviceBookingCustomerName: e.target.value })}
+                                />
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Vehicle Number *"
+                                    value={assistantForm.serviceBookingVehicleNumber}
+                                    onChange={(e) => setAssistantForm({ ...assistantForm, serviceBookingVehicleNumber: e.target.value })}
+                                />
+                                <input
+                                    type="date"
+                                    className="text-input"
+                                    value={assistantForm.serviceBookingLastServiceDate}
+                                    onChange={(e) => setAssistantForm({ ...assistantForm, serviceBookingLastServiceDate: e.target.value })}
+                                />
+                            </div>
+                        )}
 
                         <div className="visualizer-container">
                             <canvas ref={canvasRef} className="visualizer-canvas"></canvas>
@@ -647,6 +1082,11 @@ const Test = () => {
                                 placeholder="Enter 10-digit phone number"
                                 value={callForm.phoneNumber}
                                 onChange={(e) => setCallForm({ ...callForm, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        handleCall();
+                                    }
+                                }}
                             />
                             <button className="btn-call" onClick={handleCall} disabled={isCalling}>
                                 <span>📞</span> Call
@@ -664,13 +1104,16 @@ const Test = () => {
                             <select
                                 className="select-input"
                                 value={callForm.callPurpose}
-                                onChange={(e) => setCallForm({ ...callForm, callPurpose: e.target.value })}
+                                onChange={(e) => handleCallPurposeChange(e.target.value)}
                             >
+                                <option value="test_drive">Test Drive Follow-up</option>
                                 <option value="service_confirmation">Service Confirmation</option>
                                 <option value="service_complete">Service Complete</option>
                                 <option value="service_reminder">Service Reminder</option>
+                                <option value="service_followup">Service Follow-up</option>
                                 <option value="special_offer">Special Offer</option>
                                 <option value="feedback">Feedback Collection</option>
+                                <option value="insurance_renewal">Insurance Renewal</option>
                             </select>
                             <input
                                 type="text"
@@ -686,7 +1129,67 @@ const Test = () => {
                                 value={callForm.vehicleNumber}
                                 onChange={(e) => setCallForm({ ...callForm, vehicleNumber: e.target.value })}
                             />
+                            <select
+                                className="select-input"
+                                value={callForm.ttsProvider}
+                                onChange={(e) => setCallForm({ ...callForm, ttsProvider: e.target.value })}
+                            >
+                                <option value="openai">OpenAI TTS</option>
+                                <option value="elevenlabs">ElevenLabs TTS</option>
+                            </select>
+                            <select
+                                className="select-input"
+                                value={callForm.flowType}
+                                onChange={(e) => handleCallFlowTypeChange(e.target.value)}
+                            >
+                                <option value="service_booking">Service Booking</option>
+                                <option value="insurance_renewal">Insurance Renewal</option>
+                                <option value="service_booking_outbound">Service Booking Outbound</option>
+                            </select>
+                            <input
+                                type="text"
+                                className="text-input"
+                                placeholder="Additional Context (Optional)"
+                                value={callForm.additionalContext}
+                                onChange={(e) => setCallForm({ ...callForm, additionalContext: e.target.value })}
+                            />
                         </div>
+
+                        {callForm.callPurpose === 'insurance_renewal' && (
+                            <div className="options-grid">
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Vehicle Number"
+                                    value={callForm.insuranceVehicleNumber}
+                                    onChange={(e) => setCallForm({ ...callForm, insuranceVehicleNumber: e.target.value })}
+                                />
+                                <input
+                                    type="date"
+                                    className="text-input"
+                                    value={callForm.insurancePolicyExpiry}
+                                    onChange={(e) => setCallForm({ ...callForm, insurancePolicyExpiry: e.target.value })}
+                                />
+                            </div>
+                        )}
+
+                        {callForm.flowType === 'service_booking_outbound' && (
+                            <div className="options-grid">
+                                <input
+                                    type="text"
+                                    className="text-input"
+                                    placeholder="Vehicle Number"
+                                    value={callForm.serviceBookingVehicleNumber}
+                                    onChange={(e) => setCallForm({ ...callForm, serviceBookingVehicleNumber: e.target.value })}
+                                />
+                                <input
+                                    type="date"
+                                    className="text-input"
+                                    value={callForm.serviceBookingLastServiceDate}
+                                    onChange={(e) => setCallForm({ ...callForm, serviceBookingLastServiceDate: e.target.value })}
+                                />
+                            </div>
+                        )}
 
                         {callStatus && (
                             <div className={`call-status-msg msg-${callStatus.type}`}>
@@ -723,14 +1226,16 @@ const Test = () => {
                     <select
                         className="select-input dark-input"
                         value={localForm.callPurpose}
-                        onChange={(e) => setLocalForm({ ...localForm, callPurpose: e.target.value })}
+                        onChange={(e) => handleLocalCallPurposeChange(e.target.value)}
                     >
                         <option value="test_drive">Test Drive Follow-up</option>
                         <option value="service_confirmation">Service Confirmation</option>
                         <option value="service_complete">Service Complete</option>
                         <option value="service_reminder">Service Reminder</option>
+                        <option value="service_followup">Service Follow-up</option>
                         <option value="special_offer">Special Offer</option>
                         <option value="feedback">Feedback Collection</option>
+                        <option value="insurance_renewal">Insurance Renewal</option>
                     </select>
                     <input
                         type="text"
@@ -739,7 +1244,70 @@ const Test = () => {
                         value={localForm.additionalContext}
                         onChange={(e) => setLocalForm({ ...localForm, additionalContext: e.target.value })}
                     />
+                    <select
+                        className="select-input dark-input"
+                        value={localForm.ttsProvider}
+                        onChange={(e) => setLocalForm({ ...localForm, ttsProvider: e.target.value })}
+                    >
+                        <option value="openai">OpenAI TTS</option>
+                        <option value="elevenlabs">ElevenLabs TTS</option>
+                    </select>
+                    <select
+                        className="select-input dark-input"
+                        value={localForm.flowType}
+                        onChange={(e) => handleLocalFlowTypeChange(e.target.value)}
+                    >
+                        <option value="service_booking">Service Booking</option>
+                        <option value="insurance_renewal">Insurance Renewal</option>
+                        <option value="service_booking_outbound">Service Booking Outbound</option>
+                    </select>
                 </div>
+
+                {localForm.callPurpose === 'insurance_renewal' && (
+                    <div className="options-grid">
+                        <input
+                            type="text"
+                            className="text-input dark-input"
+                            placeholder="Vehicle Number"
+                            value={localForm.insuranceVehicleNumber}
+                            onChange={(e) => setLocalForm({ ...localForm, insuranceVehicleNumber: e.target.value })}
+                        />
+                        <input
+                            type="date"
+                            className="text-input dark-input"
+                            value={localForm.insurancePolicyExpiry}
+                            onChange={(e) => setLocalForm({ ...localForm, insurancePolicyExpiry: e.target.value })}
+                        />
+                        <input
+                            type="tel"
+                            className="text-input dark-input"
+                            placeholder="Customer Phone"
+                            value={localForm.insuranceCustomerPhone}
+                            onChange={(e) => setLocalForm({
+                                ...localForm,
+                                insuranceCustomerPhone: e.target.value.replace(/\D/g, '').slice(0, 10)
+                            })}
+                        />
+                    </div>
+                )}
+
+                {localForm.flowType === 'service_booking_outbound' && (
+                    <div className="options-grid">
+                        <input
+                            type="text"
+                            className="text-input dark-input"
+                            placeholder="Vehicle Number"
+                            value={localForm.serviceBookingVehicleNumber}
+                            onChange={(e) => setLocalForm({ ...localForm, serviceBookingVehicleNumber: e.target.value })}
+                        />
+                        <input
+                            type="date"
+                            className="text-input dark-input"
+                            value={localForm.serviceBookingLastServiceDate}
+                            onChange={(e) => setLocalForm({ ...localForm, serviceBookingLastServiceDate: e.target.value })}
+                        />
+                    </div>
+                )}
 
                 <div className="local-visualizer">
                     <canvas ref={localCanvasRef} className="visualizer-canvas"></canvas>
