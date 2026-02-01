@@ -9,6 +9,7 @@ import {
     updateUser,
     updateUserPassword
 } from './usersService';
+import { getRoles } from './rolesService';
 import './UserManagement.css';
 
 const UserManagement = () => {
@@ -23,15 +24,18 @@ const UserManagement = () => {
         userName: '',
         email: '',
         enterpriseId: 1,
-        password: ''
+        password: '',
+        roleName: ''
     });
     const [newPassword, setNewPassword] = useState('');
+    const [roles, setRoles] = useState([]);
 
     const normalizeUser = (item) => ({
         id: item.id ?? item.user_id ?? item.uid ?? item.cid ?? item.userId,
         userName: item.user_name ?? item.name ?? item.userName ?? '',
         email: item.email ?? '',
         enterpriseId: item.enterprise_id ?? item.enterpriseId ?? '',
+        roleName: item.role_name ?? item.roleName ?? item.role ?? '',
         createdAt: item.created_at ?? item.createdAt ?? ''
     });
 
@@ -54,6 +58,21 @@ const UserManagement = () => {
         };
 
         fetchUsers();
+    }, []);
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const data = await getRoles({ skip: 0, limit: 100 });
+                const rawRoles = data?.data?.roles || data?.data || data?.roles || data || [];
+                setRoles(rawRoles);
+            } catch (error) {
+                console.error('Failed to load roles:', error);
+                setRoles([]);
+            }
+        };
+
+        fetchRoles();
     }, []);
 
     const handleEdit = (user) => {
@@ -83,7 +102,8 @@ const UserManagement = () => {
             await updateUser(editedUser.id, {
                 user_name: editedUser.userName,
                 email: editedUser.email,
-                enterprise_id: Number(editedUser.enterpriseId) || 1
+                enterprise_id: Number(editedUser.enterpriseId) || 1,
+                role_name: editedUser.roleName || undefined
             });
 
             if (newPassword) {
@@ -112,11 +132,12 @@ const UserManagement = () => {
                 user_name: newUser.userName,
                 email: newUser.email,
                 enterprise_id: Number(newUser.enterpriseId) || 1,
-                password: newUser.password
+                password: newUser.password,
+                role_name: newUser.roleName || undefined
             });
             toast.success('User created');
             setIsCreateOpen(false);
-            setNewUser({ userName: '', email: '', enterpriseId: 1, password: '' });
+            setNewUser({ userName: '', email: '', enterpriseId: 1, password: '', roleName: '' });
             const data = await getUsers({ skip: 0, limit: 100, includeRoles: false });
             const rawUsers = data?.data?.users || data?.data || data?.users || data || [];
             setUsers(rawUsers.map(normalizeUser));
@@ -152,6 +173,7 @@ const UserManagement = () => {
                             <th>Name</th>
                             <th>Email</th>
                             <th>Enterprise ID</th>
+                            <th>Role</th>
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
@@ -164,6 +186,7 @@ const UserManagement = () => {
                                     <td>{user.userName}</td>
                                     <td>{user.email}</td>
                                     <td>{user.enterpriseId || '-'}</td>
+                                    <td>{user.roleName || '-'}</td>
                                     <td>{user.createdAt || '-'}</td>
                                     <td>
                                         <div className="user-actions">
@@ -191,7 +214,7 @@ const UserManagement = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="user-empty">
+                                <td colSpan="7" className="user-empty">
                                     No users found.
                                 </td>
                             </tr>
@@ -238,6 +261,20 @@ const UserManagement = () => {
                                     value={newUser.enterpriseId}
                                     onChange={(e) => setNewUser({ ...newUser, enterpriseId: e.target.value })}
                                 />
+                            </label>
+                            <label>
+                                Role
+                                <select
+                                    value={newUser.roleName}
+                                    onChange={(e) => setNewUser({ ...newUser, roleName: e.target.value })}
+                                >
+                                    <option value="">Select role</option>
+                                    {roles.map((role) => (
+                                        <option key={role.role_name || role.name} value={role.role_name || role.name}>
+                                            {role.role_name || role.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
                                 Password
@@ -308,6 +345,20 @@ const UserManagement = () => {
                                     value={editedUser.enterpriseId}
                                     onChange={(e) => setEditedUser({ ...editedUser, enterpriseId: e.target.value })}
                                 />
+                            </label>
+                            <label>
+                                Role
+                                <select
+                                    value={editedUser.roleName || ''}
+                                    onChange={(e) => setEditedUser({ ...editedUser, roleName: e.target.value })}
+                                >
+                                    <option value="">Select role</option>
+                                    {roles.map((role) => (
+                                        <option key={role.role_name || role.name} value={role.role_name || role.name}>
+                                            {role.role_name || role.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
                                 New Password (optional)
