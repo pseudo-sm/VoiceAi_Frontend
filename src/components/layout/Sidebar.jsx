@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BarChart2, FlaskConical, Mic, FileText, Users } from 'lucide-react';
+import { LayoutDashboard, BarChart2, FlaskConical, Mic, FileText, Users, Atom} from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -36,7 +36,7 @@ const Sidebar = () => {
                     to="/campign"
                     className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 >
-                    <FlaskConical className="nav-icon" />
+                    <Atom className="nav-icon" />
                     <span>Manage Campaign</span>
                 </NavLink>
                 <NavLink
