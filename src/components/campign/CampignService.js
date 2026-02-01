@@ -24,6 +24,14 @@ export const getCampaigns = ({ skip = 0, limit = 100, includeDetails = false }) 
   });
 };
 
+export const updateCampaign = (campaignId, formData) => {
+  return axios.put(`${API_URL}/${campaignId}`, formData, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+};
+
 export const startCampaign = (campaignId) => {
   return axios.post(`${API_URL}/${campaignId}/start`, null, {
     headers: {
