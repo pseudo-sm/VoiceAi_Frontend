@@ -51,6 +51,7 @@ const [editModelOpen, setEditMModelOpen] = useState(false);
 const [campaigns, setCampaigns] = useState([]);
 const [selectedCampaignId, setSelectedCampaignId] = useState(null);
 const navigate = useNavigate();
+  const [selectedFile, setSelectedFile] = useState(null);
 const [campaign, setCampaign] = useState({
   name: "",
   description: "",
@@ -301,6 +302,7 @@ const [selectedDays, setSelectedDays] = useState([]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
+    setSelectedFile(file);
     if (!file) return;
 
     console.log("Selected file:", file);
@@ -577,6 +579,7 @@ const handleUpdate = () => {
      <div className="form-group" style={{  alignItems: "center",
     justifyContent: "center"}}>
       <>
+     <p>upload file name<span style={{fontWeight:"600"}}> {selectedFile?.name || "-"}</span></p>
       <button
         className="action-button upload-button"
        style={{
