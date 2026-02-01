@@ -23,3 +23,19 @@ export const getCampaigns = ({ skip = 0, limit = 100, includeDetails = false }) 
     },
   });
 };
+
+export const startCampaign = (campaignId) => {
+  return axios.post(`${API_URL}/${campaignId}/start`, null, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+};
+
+export const scheduleCampaign = (campaignId) => {
+  return axios.post(`${API_URL}/${campaignId}/schedule`, null, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+};
