@@ -51,6 +51,7 @@ const [editModelOpen, setEditMModelOpen] = useState(false);
 const [campaigns, setCampaigns] = useState([]);
 const [selectedCampaignId, setSelectedCampaignId] = useState(null);
 const [actionLoading, setActionLoading] = useState({});
+ const [selectedFile, setSelectedFile] = useState(null);
 const navigate = useNavigate();
 const [campaign, setCampaign] = useState({
   name: "",
@@ -133,10 +134,10 @@ const handleCreate = async () => {
   formData.append("is_sunday", selectedDays.includes("Sunday"));
   formData.append("created_at", "2026-02-01T10:30:45.123Z");
   formData.append("updated_at", "2026-02-01T10:30:45.123Z");
-
-  if (fileInputRef.current && fileInputRef.current.files[0]) {
-    formData.append("file_url", fileInputRef.current.files[0]);
-  }
+formData.append("file", selectedFile);
+  // if (fileInputRef.current && fileInputRef.current.files[0]) {
+  //   formData.append("file", fileInputRef.current.files[0]);
+  // }
 
   // const result = await createCampaign(formData);
   // const response= await getCampaigns({ skip: 0, limit: 100, includeDetails: false });
@@ -304,6 +305,7 @@ const [selectedDays, setSelectedDays] = useState([]);
     if (!file) return;
 
     console.log("Selected file:", file);
+    setSelectedFile(file);
 
     // 👉 upload logic here (API call, FormData, etc.)
   };
