@@ -60,8 +60,23 @@ const [campaign, setCampaign] = useState({
   startDate: "",
   startTime: "",
   endDate: "",
-  endTime: ""
+  endTime: "",
+  location: "",
+  slotStartTime: "",
+  slotEndTime: "",
+  slotCapacity: ""
 });
+
+const locationOptions = [
+  { value: 'borivali', label: 'Borivali' },
+  { value: 'malad_east', label: 'Malad East' },
+  { value: 'malad_west', label: 'Malad West' },
+  { value: 'andheri_east', label: 'Andheri East' },
+  { value: 'andheri_west', label: 'Andheri West' },
+  { value: 'goregaon', label: 'Goregaon' },
+  { value: 'kandivali', label: 'Kandivali' },
+  { value: 'dahisar', label: 'Dahisar' }
+];
 
 const fetchCampaigns = async () => {
   try {
@@ -230,7 +245,11 @@ setCampaigns(normalizedCampaigns);
     startDate: "",
     startTime: "",
     endDate: "",
-    endTime: ""
+    endTime: "",
+    location: "",
+    slotStartTime: "",
+    slotEndTime: "",
+    slotCapacity: ""
   });
 };
 
@@ -586,16 +605,12 @@ const handleToggleStatus = async (item) => {
       
       
       <div className="modal-body">
-        <div className="form-group">
-          <label>Campaign Name</label>
-          <input
-            type="text"
-            name="name"
-            value={campaign.name}
-            onChange={handleChange}
-          />
+        {/* Campaign Details Section */}
+        <div className="form-section full-width">
+          <h3 className="section-title">Campaign Details</h3>
         </div>
-        {/* <div className="form-group">
+        
+        <div className="form-group">
           <label>Campaign Name</label>
           <input
             type="text"
@@ -604,130 +619,175 @@ const handleToggleStatus = async (item) => {
             value={campaign.name}
             onChange={handleChange}
           />
-          
-        </div> */}
-  
+        </div>
+
         <div className="form-group">
+          <label>Location</label>
+          <select
+            name="location"
+            value={campaign.location}
+            onChange={handleChange}
+          >
+            <option value="">Select Location</option>
+            {locationOptions.map((loc) => (
+              <option key={loc.value} value={loc.value}>
+                {loc.label}
+              </option>
+            ))}
+          </select>
+        </div>
+  
+        <div className="form-group full-width">
           <label>Campaign Description</label>
           <textarea
             name="description"
-          
+            placeholder="Enter campaign description"
             value={campaign.description}
+            onChange={handleChange}
+            rows="2"
+          />
+        </div>
+
+        <div className="form-group full-width">
+          <label>Campaign Narrative</label>
+          <textarea
+            name="narrative"
+            placeholder="Enter campaign narrative"
+            value={campaign.narrative}
+            onChange={handleChange}
+            rows="2"
+          />
+        </div>
+
+        {/* Schedule Section */}
+        <div className="form-section full-width">
+          <h3 className="section-title">Schedule</h3>
+        </div>
+
+        <div className="form-group">
+          <label>Start Date</label>
+          <input
+            type="date"
+            name="startDate"
+            value={campaign.startDate}
             onChange={handleChange}
           />
         </div>
 
         <div className="form-group">
-          <label>Campaign Narrative</label>
-          <textarea
-            name="narrative"
-            
-            value={campaign.narrative}
+          <label>Start Time</label>
+          <input
+            type="time"
+            name="startTime"
+            value={campaign.startTime}
             onChange={handleChange}
           />
         </div>
 
-     <div className="form-group">
-  <label>Start Date</label>
-  <input
-    type="date"
-    name="startDate"
-    value={campaign.startDate}
-    onChange={handleChange}
-  />
-</div>
+        <div className="form-group">
+          <label>End Date</label>
+          <input
+            type="date"
+            name="endDate"
+            value={campaign.endDate}
+            onChange={handleChange}
+          />
+        </div>
 
-<div className="form-group">
-  <label>Start Time</label>
-  <input
-    type="time"
-    name="startTime"
-    value={campaign.startTime}
-    onChange={handleChange}
-  />
-</div>
+        <div className="form-group">
+          <label>End Time</label>
+          <input
+            type="time"
+            name="endTime"
+            value={campaign.endTime}
+            onChange={handleChange}
+          />
+        </div>
 
-
-     <div className="form-group">
-  <label>End Date</label>
-  <input
-    type="date"
-    name="endDate"
-    value={campaign.endDate}
-    onChange={handleChange}
-  />
-</div>
-     <div className="form-group" style={{  alignItems: "center",
-    justifyContent: "center"}}>
-      <>
-      <button
-        className="action-button upload-button"
-       style={{
-  height: "37px",
-  width: "200px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-}}
-        onClick={handleButtonClick}
-      >
-        <Upload /> Upload file
-      </button>
-
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
-    </>
-</div>
-
-<div className="form-group">
-  <label>End Time</label>
-  <input
-    type="time"
-    name="endTime"
-    value={campaign.endTime}
-    onChange={handleChange}
-  />
-</div>
-<div className="form-group">
-     <div className="form-group-checkbox">
-      {/* Select All */}
-      <label>
-        <input
-          type="checkbox"
-          checked={selectedDays.length === days.length}
-          onChange={handleSelectAll}
-        />
-        Select All
-      </label>
-
-      
-
-      {/* Day Checkboxes */}
-      <div className="dayn-div">
-        {days.map((day) => (
-          <div key={day}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedDays.includes(day)}
-                onChange={() => handleDayChange(day)}
-              />
-              {day}
-            </label>
+        {/* Active Days Section */}
+        <div className="form-group full-width">
+          <label>Active Days</label>
+          <div className="days-selector">
+            <button
+              type="button"
+              className={`day-pill select-all ${selectedDays.length === days.length ? 'active' : ''}`}
+              onClick={handleSelectAll}
+            >
+              {selectedDays.length === days.length ? 'Deselect All' : 'Select All'}
+            </button>
+            {days.map((day) => (
+              <button
+                key={day}
+                type="button"
+                className={`day-pill ${selectedDays.includes(day) ? 'active' : ''}`}
+                onClick={() => handleDayChange(day)}
+              >
+                {day.slice(0, 3)}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <p>
-        <strong>Selected Days:</strong>{" "}
-        {selectedDays.length ? selectedDays.join(", ") : "None"}
-      </p>
-    </div>
-</div>
+        {/* Slot Configuration Section */}
+        <div className="form-section full-width">
+          <h3 className="section-title">Slot Configuration</h3>
+        </div>
+
+        <div className="slot-config-grid full-width">
+          <div className="form-group">
+            <label>Slot Start Time</label>
+            <input
+              type="time"
+              name="slotStartTime"
+              value={campaign.slotStartTime}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Slot End Time</label>
+            <input
+              type="time"
+              name="slotEndTime"
+              value={campaign.slotEndTime}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Capacity</label>
+            <input
+              type="number"
+              name="slotCapacity"
+              value={campaign.slotCapacity}
+              onChange={handleChange}
+              min="1"
+              placeholder="Max attendees"
+            />
+          </div>
+        </div>
+
+        {/* Upload Section */}
+        <div className="form-section full-width">
+          <h3 className="section-title">Customer Data</h3>
+        </div>
+
+        <div className="form-group full-width">
+          <div className="upload-area" onClick={handleButtonClick}>
+            <Upload size={24} />
+            <div className="upload-text">
+              <span className="upload-title">Upload Customer Details</span>
+              <span className="upload-hint">{selectedFile ? selectedFile.name : 'Click to upload CSV or Excel file'}</span>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+              accept=".csv,.xlsx,.xls"
+            />
+          </div>
+        </div>
 
       </div>
 

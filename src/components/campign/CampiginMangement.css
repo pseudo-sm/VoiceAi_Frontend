@@ -152,6 +152,132 @@
   cursor: not-allowed;
 }
 
+/* Section Title Styling */
+.form-section {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.form-section.full-width,
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Days Selector Pills */
+.days-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.day-pill {
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.day-pill:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.day-pill.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.day-pill.select-all {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+  font-weight: 600;
+}
+
+.day-pill.select-all:hover {
+  background: #e2e8f0;
+}
+
+.day-pill.select-all.active {
+  background: #1e40af;
+  border-color: #1e40af;
+  color: #fff;
+}
+
+/* Slot Configuration Grid */
+.slot-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.slot-config-grid .form-group {
+  margin-bottom: 0;
+}
+
+/* Upload Area */
+.upload-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-area:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.upload-area svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upload-title {
+  font-weight: 600;
+  color: #334155;
+  font-size: 14px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Legacy - kept for compatibility */
 .dayn-div{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -170,25 +296,38 @@
 
 .modal-box {
   background: #fff;
-  width: 720px;
+  width: 760px;
+  max-height: 90vh;
   border-radius: 12px;
   animation: scaleIn 0.2s ease;
-
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .modal-body {
-  padding: 20px;
-      display: grid;
+  padding: 24px;
+  display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  overflow-y: auto;
+  max-height: calc(90vh - 140px);
 }
 .new-stl{
 display: flex;
@@ -197,11 +336,12 @@ display: flex;
     justify-content: end;
 }
 .modal-footer {
-  padding: 16px 20px;
+  padding: 16px 24px;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
 }
 
 .modal-close {
@@ -222,26 +362,56 @@ display: flex;
 }
 
 .form-group input,
-.form-group textarea {
-  padding: 10px;
+.form-group textarea,
+.form-group select {
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #d1d5db;
+  background-color: #fff;
+  font-size: 14px;
+  color: #334155;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
 }
 
 .btn {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .btn.cancel {
   background: #e5e7eb;
+  color: #475569;
+}
+
+.btn.cancel:hover {
+  background: #cbd5e1;
 }
 
 .btn.primary {
   background: #2563eb;
   color: white;
+}
+
+.btn.primary:hover {
+  background: #1d4ed8;
 }
 
 @keyframes scaleIn {
