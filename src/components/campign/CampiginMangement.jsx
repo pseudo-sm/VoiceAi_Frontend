@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select';
-import {createCampaign,getCampaigns,updateCampaign,getCampaignCustomers} from "./CampignService";
+import {createCampaign,getCampaigns,updateCampaign,getCampaignCustomers,getNarratives} from "./CampignService";
 import {
   Search,
   Upload,
@@ -78,13 +78,34 @@ const locationOptions = [
   { value: 'kandivali', label: 'Kandivali' },
   { value: 'dahisar', label: 'Dahisar' }
 ];
-const narativeOptions = [
-  { value: '1', label: '1' },
-  { value: '2', label: '2' },
-  { value: '3', label: '3' },
-  { value: '4', label: '4' },
-  { value: '5', label: '5' },
-];
+
+
+
+
+const [narativeOptions, setNarativeOptions] = useState([]);
+
+useEffect(() => {
+  let mounted = true;
+  const fetchNarratives = async () => {
+    try {
+      const resp = await getNarratives({ skip: 0, limit: 100, includeLanguages: false });
+      const items = resp.data?.narratives ?? resp.data ?? [];
+      const opts = (Array.isArray(items) ? items : []).map((item) => ({
+        value: item.narrative_id ?? item.id ?? item.nid ?? item.key ?? item.value,
+        label:
+          item.narrative_text ?? item.name ?? item.title ?? item.narrative ?? String(item.narrative_id ?? item.id ?? item.nid ?? item.key ?? item.value),
+      }));
+      if (mounted) setNarativeOptions(opts);
+    } catch (err) {
+      console.error("Failed to load narratives:", err);
+    }
+  };
+
+  fetchNarratives();
+  return () => {
+    mounted = false;
+  };
+}, []);
 
 const fetchCampaigns = async () => {
   try {
@@ -138,7 +159,7 @@ setLoader(true);
   const formData = new FormData();
     formData.append("id", 10);
   formData.append("campaign_name", campaign.name);
-  formData.append("campaign_status", "Active");
+  formData.append("campaign_status", "ACTIVE");
   formData.append("enterprise_id", 1);
 
 
@@ -859,7 +880,21 @@ const handleToggleStatus = async (item) => {
             onChange={handleChange}
           />
         </div>
-
+    <div className="form-group">
+          <label>Location</label>
+          <select
+            name="location"
+            value={campaign.location}
+            onChange={handleChange}
+          >
+            <option value="">Select Location</option>
+            {locationOptions.map((loc) => (
+              <option key={loc.value} value={loc.value}>
+                {loc.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="form-group">
           <label>Campaign Description</label>
           <textarea
@@ -937,6 +972,65 @@ const handleToggleStatus = async (item) => {
             value={campaign.endTime}
             onChange={handleChange}
           />
+        </div>
+
+
+
+
+          <div className="form-group full-width">
+          <label>Active Days</label>
+          <div className="days-selector">
+            <button
+              type="button"
+              className={`day-pill select-all ${selectedDays.length === days.length ? 'active' : ''}`}
+              onClick={handleSelectAll}
+            >
+              {selectedDays.length === days.length ? 'Deselect All' : 'Select All'}
+            </button>
+            {days.map((day) => (
+              <button
+                key={day}
+                type="button"
+                className={`day-pill ${selectedDays.includes(day) ? 'active' : ''}`}
+                onClick={() => handleDayChange(day)}
+              >
+                {day.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        </div>
+            <div className="slot-config-grid full-width">
+          <div className="form-group">
+            <label>Slot Start Time</label>
+            <input
+              type="time"
+              name="slotStartTime"
+              value={campaign.slotStartTime}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Slot End Time</label>
+            <input
+              type="time"
+              name="slotEndTime"
+              value={campaign.slotEndTime}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Capacity</label>
+            <input
+              type="number"
+              name="slotCapacity"
+              value={campaign.slotCapacity}
+              onChange={handleChange}
+              min="1"
+              placeholder="Max attendees"
+            />
+          </div>
         </div>
       </div>
 
