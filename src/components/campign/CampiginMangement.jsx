@@ -623,31 +623,41 @@ const handleUpdate = async () => {
   };
 
   // Prepare JSON payload
-  const payload = {
-    campaign_name: campaign.name || "",
-    description: campaign.description || "",
-    narrative_id: campaign.narrative || null,
-    start_date: campaign.startDate || "",
-    end_date: campaign.endDate || "",
-    start_time: campaign.startTime ? new Date(`1970-01-01T${campaign.startTime}`).toISOString() : "",
-    end_time: campaign.endTime ? new Date(`1970-01-01T${campaign.endTime}`).toISOString() : "",
-    enterprise_id: campaign.enterpriseId || 1,
-    location_id: campaign.location || 1,
-    status: campaign.status || "Active",
-    updated_by: 1,
-    campaign_file: campaign.campaignFile || "", // keep existing file if no new upload
-    ...days,
-  };
+const payload = {
+  campaign_name: campaign.name || "",
+  description: campaign.description || "",
+  narrative_id: campaign.narrative ? Number(campaign.narrative) : 1,
+  start_date: campaign.startDate || "",
+  end_date: campaign.endDate || "",
+  start_time: campaign.startTime ? `${campaign.startTime}:00` : "", // HH:MM:SS
+  end_time: campaign.endTime ? `${campaign.endTime}:00` : "",       // HH:MM:SS
+  enterprise_id: campaign.enterpriseId ? Number(campaign.enterpriseId) : 1,
+  location_id: campaign.location ? 1 : 1,
+  status: campaign.status || "Active",
+  updated_by: 1,
+  campaign_file: campaign.campaignFile || "", // existing file or string
+  is_monday: selectedDays.includes("Monday"),
+  is_tuesday: selectedDays.includes("Tuesday"),
+  is_wednesday: selectedDays.includes("Wednesday"),
+  is_thursday: selectedDays.includes("Thursday"),
+  is_friday: selectedDays.includes("Friday"),
+  is_saturday: selectedDays.includes("Saturday"),
+  is_sunday: selectedDays.includes("Sunday"),
+};
+
 
   try {
     await updateCampaign(selectedCampaignId, payload);
     toast.success("Campaign updated successfully");
     await fetchCampaigns();
-    setEditModelOpen(false); // fix typo
+    setEditMModelOpen(false); // fix typo
     setSelectedCampaignId(null);
   } catch (error) {
     console.error(error.response?.data || error.message);
     toast.error("Failed to update campaign");
+  }
+  finally{
+    setEditMModelOpen(false);
   }
 };
 
