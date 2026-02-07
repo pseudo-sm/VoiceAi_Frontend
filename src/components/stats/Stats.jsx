@@ -16,9 +16,10 @@ const Stats = () => {
     const [loadError, setLoadError] = useState(null);
 
     const { summary, statusBreakdown, campaignProgress } = stats;
-    const currentSummary = summary[globalFilter] || summary.daily;
-    const currentStatusBreakdown = statusBreakdown[globalFilter] || statusBreakdown.daily;
-    const currentCampaignProgress = campaignProgress[globalFilter] || campaignProgress.daily;
+    const fallbackSummary = statsData.summary?.daily;
+    const currentSummary = summary?.[globalFilter] || summary?.daily || fallbackSummary;
+    const currentStatusBreakdown = statusBreakdown?.[globalFilter] || statusBreakdown?.daily || [];
+    const currentCampaignProgress = campaignProgress?.[globalFilter] || campaignProgress?.daily || [];
 
     const StatCard = ({ label, value, trend, isIncrease, icon: Icon, color }) => (
         <div className="stat-card">
@@ -41,22 +42,80 @@ const Stats = () => {
 
     useEffect(() => {
         const fetchStats = async () => {
-            const endpoint = import.meta.env.VITE_STATS_API_URL;
-            if (!endpoint) {
-                setStats(statsData);
-                return;
-            }
-
             setIsLoading(true);
             setLoadError(null);
 
             try {
-                const response = await fetch(endpoint);
+                const response = await fetch(
+                    `https://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net/dashboard?range_type=${globalFilter}`,
+                    { headers: { accept: 'application/json' } }
+                );
                 if (!response.ok) {
                     throw new Error(`Request failed with ${response.status}`);
                 }
                 const data = await response.json();
-                setStats(data);
+                const payload = data?.[globalFilter];
+                if (!payload) {
+                    throw new Error('Missing payload for range');
+                }
+
+                const mapped = {
+                    summary: {
+                        [globalFilter]: {
+                            totalCalls: {
+                                value: payload.summary?.total_calls?.value ?? 0,
+                                trend: payload.summary?.total_calls?.trend ?? 0,
+                                isIncrease: payload.summary?.total_calls?.is_increase ?? false
+                            },
+                            answered: {
+                                value: payload.summary?.answered?.value ?? 0,
+                                trend: payload.summary?.answered?.trend ?? 0,
+                                isIncrease: payload.summary?.answered?.is_increase ?? false
+                            },
+                            totalCampaigns: {
+                                value: payload.summary?.total_campaigns?.value ?? 0,
+                                trend: payload.summary?.total_campaigns?.trend ?? 0,
+                                isIncrease: payload.summary?.total_campaigns?.is_increase ?? false
+                            },
+                            avgCallDuration: {
+                                value: payload.summary?.avg_call_duration?.value ?? '0m 0s',
+                                trend: payload.summary?.avg_call_duration?.trend ?? 0,
+                                isIncrease: payload.summary?.avg_call_duration?.is_increase ?? false
+                            },
+                            totalCallMinutes: {
+                                value: payload.summary?.total_call_minutes?.value ?? 0,
+                                trend: payload.summary?.total_call_minutes?.trend ?? 0,
+                                isIncrease: payload.summary?.total_call_minutes?.is_increase ?? false
+                            }
+                        }
+                    },
+                    statusBreakdown: {
+                        [globalFilter]: payload.status_breakdown || []
+                    },
+                    campaignProgress: {
+                        [globalFilter]: (payload.campaign_progress || []).map((item) => ({
+                            name: item.campaign_name ?? item.name ?? 'Campaign',
+                            completed: item.completed ?? 0,
+                            pending: item.pending ?? 0
+                        }))
+                    }
+                };
+
+                setStats((prev) => ({
+                    ...prev,
+                    summary: {
+                        ...(prev.summary || {}),
+                        ...mapped.summary
+                    },
+                    statusBreakdown: {
+                        ...(prev.statusBreakdown || {}),
+                        ...mapped.statusBreakdown
+                    },
+                    campaignProgress: {
+                        ...(prev.campaignProgress || {}),
+                        ...mapped.campaignProgress
+                    }
+                }));
             } catch (error) {
                 console.error('Failed to load stats:', error);
                 setLoadError('Failed to load latest stats. Showing cached data.');
@@ -67,7 +126,7 @@ const Stats = () => {
         };
 
         fetchStats();
-    }, []);
+    }, [globalFilter]);
 
     return (
         <div className="stats-container">
