@@ -204,6 +204,27 @@
     gap: 0.5rem;
 }
 
+.page-icon-btn {
+    border: none;
+    background: #e2e8f0;
+    color: #1e293b;
+    border-radius: 8px;
+    padding: 0.4rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-icon-btn:hover:not(:disabled) {
+    background: #cbd5e1;
+}
+
 .report-filter-overlay {
     position: fixed;
     inset: 0;

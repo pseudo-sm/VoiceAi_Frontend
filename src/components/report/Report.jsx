@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, X, Filter, ArrowUpDown } from 'lucide-react';
+import { Download, X, Filter, ArrowUpDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
 import reportData from '../../data/reportData.json';
 import './Report.css';
 
@@ -361,19 +361,20 @@ const Report = () => {
                 <div className="page-actions">
                     <button
                         type="button"
-                        className="filter-btn ghost"
+                        className="page-icon-btn"
                         onClick={() => {
                             const next = { ...filters, page: 1 };
                             setFilters(next);
                             fetchFilteredReports(next);
                         }}
                         disabled={isLoading || pagination.page === 1}
+                        aria-label="First page"
                     >
-                        First
+                        <ChevronsLeft size={18} />
                     </button>
                     <button
                         type="button"
-                        className="filter-btn ghost"
+                        className="page-icon-btn"
                         onClick={() => {
                             const nextPage = Math.max(1, pagination.page - 1);
                             const next = { ...filters, page: nextPage };
@@ -381,12 +382,13 @@ const Report = () => {
                             fetchFilteredReports(next);
                         }}
                         disabled={isLoading || pagination.page === 1}
+                        aria-label="Previous page"
                     >
-                        Prev
+                        <ChevronLeft size={18} />
                     </button>
                     <button
                         type="button"
-                        className="filter-btn ghost"
+                        className="page-icon-btn"
                         onClick={() => {
                             const totalPages = Math.max(1, Math.ceil(pagination.totalRecords / pagination.pageSize));
                             const nextPage = Math.min(totalPages, pagination.page + 1);
@@ -398,12 +400,13 @@ const Report = () => {
                             isLoading ||
                             pagination.page >= Math.max(1, Math.ceil(pagination.totalRecords / pagination.pageSize))
                         }
+                        aria-label="Next page"
                     >
-                        Next
+                        <ChevronRight size={18} />
                     </button>
                     <button
                         type="button"
-                        className="filter-btn ghost"
+                        className="page-icon-btn"
                         onClick={() => {
                             const totalPages = Math.max(1, Math.ceil(pagination.totalRecords / pagination.pageSize));
                             const next = { ...filters, page: totalPages };
@@ -414,8 +417,9 @@ const Report = () => {
                             isLoading ||
                             pagination.page >= Math.max(1, Math.ceil(pagination.totalRecords / pagination.pageSize))
                         }
+                        aria-label="Last page"
                     >
-                        Last
+                        <ChevronsRight size={18} />
                     </button>
                 </div>
             </div>
