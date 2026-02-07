@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select';
-import {createCampaign,getCampaigns,updateCampaign,getCampaignCustomers,getNarratives} from "./CampignService";
+import {createCampaign,getCampaigns,updateCampaign,getCampaignCustomers,getNarratives,getCampaignById} from "./CampignService";
 import {
   Search,
   Upload,
@@ -156,29 +156,110 @@ setLoader(true);
 
   )
   
-  const formData = new FormData();
-    formData.append("id", 10);
-  formData.append("campaign_name", campaign.name);
-  formData.append("campaign_status", "ACTIVE");
-  formData.append("enterprise_id", 1);
+const payload = {
+  campaign_name: campaign.name,
+  description: campaign.description,
+  status: "ACTIVE",
+
+  enterprise_id: 1,
+  location_id: 1,
+  narrative_id: campaign.narrative,
+  created_by: 1,
+
+  start_date: campaign.startDate,
+  start_time: campaign.startTime,
+  end_date: campaign.endDate,
+  end_time: campaign.endTime,
+
+  is_monday: selectedDays.includes("Monday"),
+  is_tuesday: selectedDays.includes("Tuesday"),
+  is_wednesday: selectedDays.includes("Wednesday"),
+  is_thursday: selectedDays.includes("Thursday"),
+  is_friday: selectedDays.includes("Friday"),
+  is_saturday: selectedDays.includes("Saturday"),
+  is_sunday: selectedDays.includes("Sunday"),
+
+  slots: [
+    {
+      slot_capacity: 10,
+      slot_start_time: "12:00:00",
+      slot_end_time: "17:00:00"
+    }
+  ]
+};
+const formData = new FormData();
+
+/* 🔥 THIS IS THE KEY LINE */
+formData.append("data", JSON.stringify(payload));
+
+if (selectedFile) {
+  formData.append("file", selectedFile);
+}
 
 
-  formData.append("description", campaign.description);
-  formData.append("narrative_id", campaign.narrative);
-  formData.append("start_date", campaign.startDate);
-  formData.append("start_time", campaign.startTime);
-  formData.append("end_date", campaign.endDate);
-  formData.append("end_time", campaign.endTime);
-  formData.append("is_monday", selectedDays.includes("Monday"));
-  formData.append("is_tuesday", selectedDays.includes("Tuesday"));
-  formData.append("is_wednesday", selectedDays.includes("Wednesday"));
-  formData.append("is_thursday", selectedDays.includes("Thursday"));
-  formData.append("is_friday", selectedDays.includes("Friday"));
-  formData.append("is_saturday", selectedDays.includes("Saturday"));
-  formData.append("is_sunday", selectedDays.includes("Sunday"));
-  formData.append("created_at", "2026-02-01T10:30:45.123Z");
-  formData.append("updated_at", "2026-02-01T10:30:45.123Z");
-formData.append("file", selectedFile);
+
+//   const formData = new FormData();
+//     formData.append("id", 10);
+//   formData.append("campaign_name", campaign.name);
+//   formData.append("campaign_status", "ACTIVE");
+//   formData.append("enterprise_id", 1);
+
+
+//   formData.append("description", campaign.description);
+//   formData.append("narrative_id", campaign.narrative);
+//   formData.append("start_date", campaign.startDate);
+//   formData.append("start_time", campaign.startTime);
+//   formData.append("end_date", campaign.endDate);
+//   formData.append("end_time", campaign.endTime);
+//   formData.append("is_monday", selectedDays.includes("Monday"));
+//   formData.append("is_tuesday", selectedDays.includes("Tuesday"));
+//   formData.append("is_wednesday", selectedDays.includes("Wednesday"));
+//   formData.append("is_thursday", selectedDays.includes("Thursday"));
+//   formData.append("is_friday", selectedDays.includes("Friday"));
+//   formData.append("is_saturday", selectedDays.includes("Saturday"));
+//   formData.append("is_sunday", selectedDays.includes("Sunday"));
+//   formData.append("created_at", "2026-02-01T10:30:45.123Z");
+//   formData.append("updated_at", "2026-02-01T10:30:45.123Z");
+// formData.append("file", selectedFile);
+
+
+// const formData = new FormData();
+
+// formData.append("campaign_name", campaign.name);
+// formData.append("description", campaign.description);
+// formData.append("status", "ACTIVE");
+
+// formData.append("enterprise_id", 1);
+// formData.append("location_id", 1);
+// formData.append("narrative_id", campaign.narrative);
+// formData.append("created_by", 1);
+
+// formData.append("start_date", campaign.startDate);   // "2026-01-01"
+// formData.append("start_time", campaign.startTime);   // "00:00:00"
+// formData.append("end_date", campaign.endDate);       // "2026-12-31"
+// formData.append("end_time", campaign.endTime);       // "23:59:59"
+
+// /* Days */
+// formData.append("is_monday", selectedDays.includes("Monday"));
+// formData.append("is_tuesday", selectedDays.includes("Tuesday"));
+// formData.append("is_wednesday", selectedDays.includes("Wednesday"));
+// formData.append("is_thursday", selectedDays.includes("Thursday"));
+// formData.append("is_friday", selectedDays.includes("Friday"));
+// formData.append("is_saturday", selectedDays.includes("Saturday"));
+// formData.append("is_sunday", selectedDays.includes("Sunday"));
+
+// /* Slots (array of objects) */
+// formData.append("slots[0][slot_capacity]", 10);
+// formData.append("slots[0][slot_start_time]", "12:00:00");
+// formData.append("slots[0][slot_end_time]", "17:00:00");
+
+// /* File (if required) */
+// if (selectedFile) {
+//   formData.append("file", selectedFile);
+// }
+
+
+
   // if (fileInputRef.current && fileInputRef.current.files[0]) {
   //   formData.append("file", fileInputRef.current.files[0]);
   // }
@@ -329,6 +410,26 @@ const [selectedDays, setSelectedDays] = useState([]);
     }
   };
 
+  const handleOpenCreateModal = () => {
+    // Reset all form data
+    setCampaign({
+      name: "",
+      description: "",
+      narrative: "",
+      startDate: "",
+      startTime: "",
+      endDate: "",
+      endTime: "",
+      location: "",
+      slotStartTime: "",
+      slotEndTime: "",
+      slotCapacity: ""
+    });
+    setSelectedDays([]);
+    setSelectedFile(null);
+    setModelOpen(true);
+  };
+
 
 
 
@@ -361,11 +462,95 @@ const [selectedDays, setSelectedDays] = useState([]);
     // 👉 upload logic here (API call, FormData, etc.)
   };
 
-const handleView = (item) => {
-  setCampaign({ ...item });
-  setSelectedCampaignId(item.id);
-  setEditMModelOpen(true);
+// const handleView =async (item) => {
+
+//   const data=await getCampaignById(item.cid)
+
+//   setCampaign({ ...item });
+//   setSelectedCampaignId(item.id);
+  
+//   // Set selected days based on campaign data
+//   const campaignDays = [];
+//   if (item.days?.monday) campaignDays.push("Monday");
+//   if (item.days?.tuesday) campaignDays.push("Tuesday");
+//   if (item.days?.wednesday) campaignDays.push("Wednesday");
+//   if (item.days?.thursday) campaignDays.push("Thursday");
+//   if (item.days?.friday) campaignDays.push("Friday");
+//   if (item.days?.saturday) campaignDays.push("Saturday");
+//   if (item.days?.sunday) campaignDays.push("Sunday");
+  
+//   setSelectedDays(campaignDays);
+//   setEditMModelOpen(true);
+// };
+
+
+// const handleView = async (item) => {
+//   console.log(item,"item in side handelview")
+// const data = await getCampaignById({
+//   campaignId: item.id,
+// });
+
+//   setCampaign(data);
+//   setSelectedCampaignId(item.id);
+
+//   const campaignDays = [];
+//   const days = data.days;
+
+//   if (days?.monday) campaignDays.push("Monday");
+//   if (days?.tuesday) campaignDays.push("Tuesday");
+//   if (days?.wednesday) campaignDays.push("Wednesday");
+//   if (days?.thursday) campaignDays.push("Thursday");
+//   if (days?.friday) campaignDays.push("Friday");
+//   if (days?.saturday) campaignDays.push("Saturday");
+//   if (days?.sunday) campaignDays.push("Sunday");
+
+//   setSelectedDays(campaignDays);
+//   setEditMModelOpen(true);
+// };
+
+
+
+const handleView = async (item) => {
+  try {
+    const { data } = await getCampaignById({ campaignId: item.id });
+
+    // Map API response to form-friendly keys
+    const campaignData = {
+      id: data.cid,
+      name: data.campaign_name,
+      description: data.description,
+      narrative: data.narrative_id,
+      location: data.location_id,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      startTime: data.start_time.slice(0,5), // remove seconds for input[type="time"]
+      endTime: data.end_time.slice(0,5),
+      slotStartTime: data.slots?.[0]?.slot_start_time.slice(0,5) || '',
+      slotEndTime: data.slots?.[0]?.slot_end_time.slice(0,5) || '',
+      slotCapacity: data.slots?.[0]?.slot_capacity || '',
+    };
+
+    // Map days
+    const campaignDays = [];
+    if (data.is_monday) campaignDays.push("Monday");
+    if (data.is_tuesday) campaignDays.push("Tuesday");
+    if (data.is_wednesday) campaignDays.push("Wednesday");
+    if (data.is_thursday) campaignDays.push("Thursday");
+    if (data.is_friday) campaignDays.push("Friday");
+    if (data.is_saturday) campaignDays.push("Saturday");
+    if (data.is_sunday) campaignDays.push("Sunday");
+
+    setCampaign(campaignData);
+    setSelectedCampaignId(data.cid);
+    setSelectedDays(campaignDays);
+    setEditMModelOpen(true); // make sure state name matches
+  } catch (error) {
+    console.error("Failed to fetch campaign", error);
+  }
 };
+
+
+
 
 
 
@@ -378,38 +563,87 @@ const handleChange = (e) => {
 };
 
 
+// const handleUpdate = async () => {
+//   if (!selectedCampaignId) return;
+
+//   const formData = new FormData();
+//   formData.append("campaign_status", campaign.statusFromApi || "Active");
+//   formData.append("campaign_name", campaign.name || "");
+//   formData.append("description", campaign.description || "");
+//   formData.append("narrative_id", campaign.narrative || "");
+//   formData.append("start_date", campaign.startDate || "");
+//   formData.append("start_time", campaign.startTime || "");
+//   formData.append("end_date", campaign.endDate || "");
+//   formData.append("end_time", campaign.endTime || "");
+//   formData.append("enterprise_id", campaign.enterpriseId || 1);
+//   formData.append("updated_by", 1);
+
+//   formData.append("is_monday", Boolean(campaign.days?.monday));
+//   formData.append("is_tuesday", Boolean(campaign.days?.tuesday));
+//   formData.append("is_wednesday", Boolean(campaign.days?.wednesday));
+//   formData.append("is_thursday", Boolean(campaign.days?.thursday));
+//   formData.append("is_friday", Boolean(campaign.days?.friday));
+//   formData.append("is_saturday", Boolean(campaign.days?.saturday));
+//   formData.append("is_sunday", Boolean(campaign.days?.sunday));
+//   formData.append("status", "Active");
+//   formData.append("location_id", 1);
+
+
+//   if (fileInputRef.current && fileInputRef.current.files[0]) {
+//     formData.append("file", fileInputRef.current.files[0]);
+//   }
+
+//   try {
+//     await updateCampaign(selectedCampaignId, formData);
+//     toast.success("Campaign updated");
+//     await fetchCampaigns();
+//     setEditMModelOpen(false);
+//     setSelectedCampaignId(null);
+//   } catch (error) {
+//     console.error(error.response?.data || error.message);
+//     toast.error("Failed to update campaign");
+//   }
+// };
+
+
+
+
 const handleUpdate = async () => {
   if (!selectedCampaignId) return;
 
-  const formData = new FormData();
-  formData.append("campaign_status", campaign.statusFromApi || "Active");
-  formData.append("campaign_name", campaign.name || "");
-  formData.append("description", campaign.description || "");
-  formData.append("narrative_id", campaign.narrative || "");
-  formData.append("start_date", campaign.startDate || "");
-  formData.append("start_time", campaign.startTime || "");
-  formData.append("end_date", campaign.endDate || "");
-  formData.append("end_time", campaign.endTime || "");
-  formData.append("enterprise_id", campaign.enterpriseId || 1);
-  formData.append("updated_by", 1);
+  // Map selected days to API boolean fields
+  const days = {
+    is_monday: selectedDays.includes("Monday"),
+    is_tuesday: selectedDays.includes("Tuesday"),
+    is_wednesday: selectedDays.includes("Wednesday"),
+    is_thursday: selectedDays.includes("Thursday"),
+    is_friday: selectedDays.includes("Friday"),
+    is_saturday: selectedDays.includes("Saturday"),
+    is_sunday: selectedDays.includes("Sunday"),
+  };
 
-  formData.append("is_monday", Boolean(campaign.days?.monday));
-  formData.append("is_tuesday", Boolean(campaign.days?.tuesday));
-  formData.append("is_wednesday", Boolean(campaign.days?.wednesday));
-  formData.append("is_thursday", Boolean(campaign.days?.thursday));
-  formData.append("is_friday", Boolean(campaign.days?.friday));
-  formData.append("is_saturday", Boolean(campaign.days?.saturday));
-  formData.append("is_sunday", Boolean(campaign.days?.sunday));
-
-  if (fileInputRef.current && fileInputRef.current.files[0]) {
-    formData.append("file", fileInputRef.current.files[0]);
-  }
+  // Prepare JSON payload
+  const payload = {
+    campaign_name: campaign.name || "",
+    description: campaign.description || "",
+    narrative_id: campaign.narrative || null,
+    start_date: campaign.startDate || "",
+    end_date: campaign.endDate || "",
+    start_time: campaign.startTime ? new Date(`1970-01-01T${campaign.startTime}`).toISOString() : "",
+    end_time: campaign.endTime ? new Date(`1970-01-01T${campaign.endTime}`).toISOString() : "",
+    enterprise_id: campaign.enterpriseId || 1,
+    location_id: campaign.location || 1,
+    status: campaign.status || "Active",
+    updated_by: 1,
+    campaign_file: campaign.campaignFile || "", // keep existing file if no new upload
+    ...days,
+  };
 
   try {
-    await updateCampaign(selectedCampaignId, formData);
-    toast.success("Campaign updated");
+    await updateCampaign(selectedCampaignId, payload);
+    toast.success("Campaign updated successfully");
     await fetchCampaigns();
-    setEditMModelOpen(false);
+    setEditModelOpen(false); // fix typo
     setSelectedCampaignId(null);
   } catch (error) {
     console.error(error.response?.data || error.message);
@@ -497,7 +731,7 @@ const handleToggleStatus = async (item) => {
     <div className="CampiginMangement-b">
         <div>
 <h1>Campaign Management</h1>
-<button className="action-button upload-button" onClick={()=>{setModelOpen(true)}}>Create Campigin</button>
+<button className="action-button upload-button" onClick={handleOpenCreateModal}>Create Campigin</button>
         </div>
       
 
@@ -999,7 +1233,9 @@ const handleToggleStatus = async (item) => {
             ))}
           </div>
         </div>
-            <div className="slot-config-grid full-width">
+        
+  <div className="form-group">
+             <div className="slot-config-grid full-width">
           <div className="form-group">
             <label>Slot Start Time</label>
             <input
@@ -1032,6 +1268,10 @@ const handleToggleStatus = async (item) => {
             />
           </div>
         </div>
+        </div>
+
+
+        
       </div>
 
       <div className="modal-footer">
