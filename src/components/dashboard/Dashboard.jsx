@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { toast } from "react-toastify";
-
+import {getCampaignCustomers} from "../campign/CampignService";
 import {
   Search,
   Upload,
@@ -85,144 +85,55 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedActivityId, setExpandedActivityId] = useState(null);
-
+  const [dummyData, setDummyData] = useState([]);
   const { state } = useLocation(); // state === item
 
   console.log("in Dashbord", state); // your item object
-  // Enhanced Dummy Data
-  const dummyData = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-      vehicleName: "Toyota Camry",
-      vehicleNo: "KA-01-AB-1234",
-      status: "Pending",
-      lastCalled: "2024-01-14T10:30:00",
-      address: {
-        street: "123 Main St",
-        city: "Bangalore",
-        state: "KA",
-        zip: "560001",
-      },
-      activityLog: [
-        {
-          date: "2024-01-14 10:30 AM",
-          callBy: "Agent Smith",
-          duration: "5m 23s",
-          transcript:
-            "Agent: Hello, am I speaking with Mr. Doe?\nCustomer: Yes, this is John.\nAgent: Hi John, I'm calling regarding your Toyota Camry service.\nCustomer: Oh right, is it ready?\nAgent: Yes sir, it's ready for pickup.\nCustomer: Great, I'll be there in an hour.",
+
+
+useEffect(() => {
+  console.log(state,"statet");
+
+  getCampaignCustomers({
+    campaignId: state.id,
+    skip: 0,
+    limit: 100,
+    includeCampaign: false,
+  })
+    .then((response) => {
+      // Transform API response to expected format
+      const transformedData = response.data.customers.map((customer, index) => ({
+        id: customer.campaign_customer_id || index,
+        name: customer.customer_name,
+        email: customer.email,
+        phone: customer.phone_number,
+        whatsapp: customer.whatsapp_number,
+        gender: customer.gender,
+        vehicleName: customer.vehicle_brand,
+        vehicleNo: customer.vehicle_make_model,
+        purchaseDate: customer.purchase_date,
+        lastServiceDate: customer.last_service_date,
+        isFreeService: customer.is_free_service,
+        status: customer.status,
+        campaignCustomerId: customer.campaign_customer_id,
+        campaignId: customer.campaign_id,
+        address: {
+          street: "",
+          city: "",
+          state: "",
+          zip: "",
         },
-        {
-          date: "2024-01-14 10:30 AM",
-          callBy: "Agent Smith",
-          duration: "5m 23s",
-          transcript:
-            "Agent: Hello, am I speaking with Mr. Doe?\nCustomer: Yes, this is John.\nAgent: Hi John, I'm calling regarding your Toyota Camry service.\nCustomer: Oh right, is it ready?\nAgent: Yes sir, it's ready for pickup.\nCustomer: Great, I'll be there in an hour.",
-        },
-        {
-          date: "2024-01-10 02:15 PM",
-          callBy: "Agent Smith",
-          duration: "2m 10s",
-          transcript:
-            "Agent: Hello, just a reminder about your appointment.\nCustomer: Yes, I remember. Tuesday at 10?\nAgent: Correct. See you then.",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      phone: "+1 (555) 987-6543",
-      vehicleName: "Honda City",
-      vehicleNo: "MH-02-CD-5678",
-      status: "Pending",
-      lastCalled: "2024-01-13T15:45:00",
-      address: {
-        street: "456 Park Ave",
-        city: "Mumbai",
-        state: "MH",
-        zip: "400001",
-      },
-      activityLog: [
-        {
-          date: "2024-01-13 03:45 PM",
-          callBy: "Agent Doe",
-          duration: "1m 45s",
-          transcript:
-            "Agent: Hello Ms. Smith, calling to confirm your vehicle details.\nCustomer: Go ahead.\nAgent: Honda City, MH-02-CD-5678?\nCustomer: That's correct.",
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "Robert Johnson",
-      email: "robert.j@example.com",
-      phone: "+1 (555) 456-7890",
-      vehicleName: "Ford EcoSport",
-      vehicleNo: "DL-03-EF-9012",
-      status: "Done",
-      lastCalled: "2024-01-12T09:15:00",
-      address: {
-        street: "789 Lake View",
-        city: "Delhi",
-        state: "DL",
-        zip: "110001",
-      },
-      activityLog: [
-        {
-          date: "2024-01-12 09:15 AM",
-          callBy: "Agent Smith",
-          duration: "8m 12s",
-          transcript:
-            "Agent: Good morning Mr. Johnson.\nCustomer: Morning.\nAgent: We found an issue with the brake pads.\nCustomer: Oh, how much will that cost?\nAgent: It's covered under warranty.\nCustomer: That's a relief!",
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: "Emily Davis",
-      email: "emily.d@example.com",
-      phone: "+1 (555) 234-5678",
-      vehicleName: "Hyundai Creta",
-      vehicleNo: "TN-04-GH-3456",
-      status: "Pending",
-      lastCalled: "2024-01-11T14:20:00",
-      address: {
-        street: "321 Hill Rd",
-        city: "Chennai",
-        state: "TN",
-        zip: "600001",
-      },
-      activityLog: [],
-    },
-    {
-      id: 5,
-      name: "Michael Wilson",
-      email: "m.wilson@example.com",
-      phone: "+1 (555) 876-5432",
-      vehicleName: "Maruti Swift",
-      vehicleNo: "KA-05-IJ-7890",
-      status: "Done",
-      lastCalled: "2024-01-10T11:00:00",
-      address: {
-        street: "654 River Side",
-        city: "Bangalore",
-        state: "KA",
-        zip: "560002",
-      },
-      activityLog: [
-        {
-          date: "2024-01-10 11:00 AM",
-          callBy: "Agent Doe",
-          duration: "3m 30s",
-          transcript:
-            "Agent: Hello, your car service is due.\nCustomer: Can I book for next week?\nAgent: Sure, what day works best?\nCustomer: Wednesday would be good.",
-        },
-      ],
-    },
-  ];
+        activityLog: [],
+        lastCalled: new Date().toISOString(),
+      }));
+      
+      setDummyData(transformedData);
+      console.log("Transformed Customers:", transformedData);
+    })
+    .catch((error) => {
+      console.error("Error fetching customers:", error);
+    });
+}, [state]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
