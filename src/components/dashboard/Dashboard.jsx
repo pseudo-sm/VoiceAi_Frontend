@@ -158,7 +158,7 @@ useEffect(() => {
     }, 1000);
   };
 
-  const itemsPerPage = 3;
+  const itemsPerPage = 50;
   const filteredData = dummyData.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

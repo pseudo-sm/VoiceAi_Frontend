@@ -6,6 +6,29 @@ const API_URL =
 // Base host for other endpoints (narratives, etc.)
 const BASE_URL = "https://telvi-voice-ai-fnfafecbhqa9edfp.centralindia-01.azurewebsites.net";
 
+
+
+export const getCampaignById = ({
+  campaignId,
+  includeDetails = false,
+  includeSlots = true,
+  generateSignedUrl = false,
+  sasExpiryHours = 24,
+}) => {
+  return axios.get(`${BASE_URL}/campaigns/${campaignId}`, {
+    headers: {
+      Accept: "application/json",
+    },
+    params: {
+      include_details: includeDetails,
+      include_slots: includeSlots,
+      generate_signed_url: generateSignedUrl,
+      sas_expiry_hours: sasExpiryHours,
+    },
+  });
+};
+
+
 export const createCampaign = (formData) => {
   return axios.post(API_URL, formData, {
     headers: {
@@ -27,10 +50,11 @@ export const getCampaigns = ({ skip = 0, limit = 100, includeDetails = false }) 
   });
 };
 
-export const updateCampaign = (campaignId, formData) => {
-  return axios.put(`${API_URL}/${campaignId}`, formData, {
+export const updateCampaign = (campaignId, payload) => {
+  return axios.put(`${API_URL}/${campaignId}`, payload, {
     headers: {
       Accept: "application/json",
+      "Content-Type": "application/json",
     },
   });
 };
