@@ -324,7 +324,7 @@
 .modal-body {
   padding: 24px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* grid-template-columns: repeat(2, 1fr); */
   gap: 16px;
   overflow-y: auto;
   max-height: calc(90vh - 140px);
