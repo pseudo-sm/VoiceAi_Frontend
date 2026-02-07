@@ -47,3 +47,23 @@ export const scheduleCampaign = (campaignId) => {
     },
   });
 };
+
+
+
+export const getCampaignCustomers = ({
+  campaignId,
+  skip = 0,
+  limit = 100,
+  includeCampaign = false,
+}) => {
+  return axios.get(`${API_URL}/${campaignId}/customers`, {
+    params: {
+      skip,
+      limit,
+      include_campaign: includeCampaign,
+    },
+    headers: {
+      Accept: "application/json",
+    },
+  });
+};

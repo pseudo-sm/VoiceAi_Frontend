@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select';
-import {createCampaign,getCampaigns,updateCampaign} from "./CampignService";
+import {createCampaign,getCampaigns,updateCampaign,getCampaignCustomers} from "./CampignService";
 import {
   Search,
   Upload,
@@ -52,6 +52,7 @@ const [campaigns, setCampaigns] = useState([]);
 const [selectedCampaignId, setSelectedCampaignId] = useState(null);
 const [actionLoading, setActionLoading] = useState({});
  const [selectedFile, setSelectedFile] = useState(null);
+ const[loader,setLoader]=useState(false);
 const navigate = useNavigate();
 const [campaign, setCampaign] = useState({
   name: "",
@@ -76,6 +77,13 @@ const locationOptions = [
   { value: 'goregaon', label: 'Goregaon' },
   { value: 'kandivali', label: 'Kandivali' },
   { value: 'dahisar', label: 'Dahisar' }
+];
+const narativeOptions = [
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+  { value: '3', label: '3' },
+  { value: '4', label: '4' },
+  { value: '5', label: '5' },
 ];
 
 const fetchCampaigns = async () => {
@@ -118,7 +126,7 @@ useEffect(() => {
   fetchCampaigns();
 }, []);
 const handleCreate = async () => {
-
+setLoader(true);
   console.log(
 "alldata",
     campaign,
@@ -130,7 +138,7 @@ const handleCreate = async () => {
   const formData = new FormData();
     formData.append("id", 10);
   formData.append("campaign_name", campaign.name);
-  formData.append("campaign_status", "active");
+  formData.append("campaign_status", "Active");
   formData.append("enterprise_id", 1);
 
 
@@ -211,7 +219,10 @@ setCampaigns(normalizedCampaigns);
   console.error(error.response?.data || error.message);
   toast.error("Failed to create campaign");
 }
-
+finally{
+  setLoader(false);
+  setModelOpen(false);
+}
 
 
 
@@ -350,7 +361,7 @@ const handleUpdate = async () => {
   if (!selectedCampaignId) return;
 
   const formData = new FormData();
-  formData.append("campaign_status", campaign.statusFromApi || "active");
+  formData.append("campaign_status", campaign.statusFromApi || "Active");
   formData.append("campaign_name", campaign.name || "");
   formData.append("description", campaign.description || "");
   formData.append("narrative_id", campaign.narrative || "");
@@ -387,7 +398,7 @@ const handleUpdate = async () => {
 
 const handleToggleStatus = async (item) => {
   const isDisabled = String(item.statusFromApi || "").toLowerCase() === "disabled";
-  const nextStatus = isDisabled ? "active" : "disabled";
+  const nextStatus = isDisabled ? "Active" : "disabled";
   setActionLoading((prev) => ({ ...prev, [item.id]: "toggle" }));
 
   const formData = new FormData();
@@ -418,7 +429,7 @@ const handleToggleStatus = async (item) => {
     setCampaigns((prev) =>
       prev.map((campaign) =>
         campaign.id === item.id
-          ? { ...campaign, statusFromApi: nextStatus === "active" ? "Active" : "Disabled" }
+          ? { ...campaign, statusFromApi: nextStatus === "Active" ? "Active" : "Disabled" }
           : campaign
       )
     );
@@ -648,7 +659,7 @@ const handleToggleStatus = async (item) => {
           />
         </div>
 
-        <div className="form-group full-width">
+        {/* <div className="form-group full-width">
           <label>Campaign Narrative</label>
           <textarea
             name="narrative"
@@ -657,7 +668,31 @@ const handleToggleStatus = async (item) => {
             onChange={handleChange}
             rows="2"
           />
+        </div> */}
+
+
+
+    <div className="form-group">
+          <label>Campaign Narrative</label>
+          <select
+            name="narrative"
+            value={campaign.narrative}
+            onChange={handleChange}
+          >
+            <option value="">Select narrative</option>
+            {narativeOptions.map((loc) => (
+              <option key={loc.value} value={loc.value}>
+                {loc.label}
+              </option>
+            ))}
+          </select>
         </div>
+
+
+
+
+
+
 
         {/* Schedule Section */}
         <div className="form-section full-width">
@@ -796,7 +831,7 @@ const handleToggleStatus = async (item) => {
           Cancel
         </button>
         <button className="btn primary" onClick={handleCreate}>
-          Create
+         {loader ?  <div>Loading..</div>:<div>Create</div>  }
         </button>
       </div>
 
@@ -804,7 +839,7 @@ const handleToggleStatus = async (item) => {
   </div>
 )}
 {editModelOpen && (
-  <div className="modal-overlay" onClick={() => setEditModalOpen(false)}>
+  <div className="modal-overlay" onClick={() => setEditMModelOpen(false)}>
     <div className="modal-box" onClick={(e) => e.stopPropagation()}>
       <div className="modal-header">
         <h2>Edit Campaign</h2>
@@ -834,14 +869,35 @@ const handleToggleStatus = async (item) => {
           />
         </div>
 
-        <div className="form-group">
+        {/* <div className="form-group">
           <label>Campaign Narrative</label>
           <textarea
             name="narrative"
             value={campaign.narrative}
             onChange={handleChange}
           />
+        </div> */}
+
+
+    <div className="form-group">
+          <label>Campaign Narrative</label>
+          <select
+            name="narrative"
+            value={campaign.narrative}
+            onChange={handleChange}
+          >
+            <option value="">Select narrative</option>
+            {narativeOptions.map((loc) => (
+              <option key={loc.value} value={loc.value}>
+                {loc.label}
+              </option>
+            ))}
+          </select>
         </div>
+
+
+
+
 
         <div className="form-group">
           <label>Start Date</label>

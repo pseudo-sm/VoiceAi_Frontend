@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { toast } from "react-toastify";
-
+import {getCampaignCustomers} from "../campign/CampignService";
 import {
   Search,
   Upload,
@@ -89,6 +89,29 @@ const Dashboard = () => {
   const { state } = useLocation(); // state === item
 
   console.log("in Dashbord", state); // your item object
+
+
+useEffect(() => {
+  console.log(state,"statet");
+
+
+  getCampaignCustomers({
+    campaignId: state.id,
+    skip: 0,
+    limit: 100,
+    includeCampaign: false,
+  })
+    .then((response) => {
+      console.log("Customers:", response.data);
+      // setCustomers(response.data);
+    })
+    .catch((error) => {
+      console.error("Error fetching customers:", error);
+    });
+}, []);
+
+
+
   // Enhanced Dummy Data
   const dummyData = [
     {
